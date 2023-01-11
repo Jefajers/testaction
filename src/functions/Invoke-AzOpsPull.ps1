@@ -177,20 +177,60 @@
             $rootScope = $script:AzOpsPartialRoot.id | Sort-Object -Unique
         }
 
+        # Parameters
+        $parameters = $PSBoundParameters | ConvertTo-PSFHashtable -Inherit -Include IncludeResourcesInResourceGroup, IncludeResourceType, SkipPim, SkipLock, SkipPolicy, SkipRole, SkipResourceGroup, SkipChildResource, SkipResource, SkipResourceType, ExportRawTemplate, StatePath
+
         if ($rootScope -and $script:AzOpsAzManagementGroup) {
             foreach ($root in $rootScope) {
-                # Create AzOpsState Structure recursively
+                # Create AzOpsState structure recursively
                 Save-AzOpsManagementGroupChildren -Scope $root -StatePath $StatePath
 
-                # Discover Resource at scope recursively
-                $parameters = $PSBoundParameters | ConvertTo-PSFHashtable -Inherit -Include IncludeResourcesInResourceGroup, IncludeResourceType, SkipPim, SkipLock, SkipPolicy, SkipRole, SkipResourceGroup, SkipChildResource, SkipResource, SkipResourceType, ExportRawTemplate, StatePath
-                Get-AzOpsResourceDefinition -Scope $root @parameters
+                # Discover resources at managementgroup scope
+                Get-AzOpsResourceDefinition -Scope $root @parameters -SkipRecursiveSubscriptionDiscovery
+
+                #region Prepare Input Data For Parallel Processing
+                $query = "resourcecontainers | where type == 'microsoft.resources/subscriptions' | project id, name, subscriptionId, tenantId | order by ['id'] asc"
+                $scopeObject = New-AzOpsScope -Scope $root -StatePath $StatePath -ErrorAction Stop
+                $subscriptions = Search-AzOpsAzGraph -ManagementGroup $scopeObject.Name -Query $query -ErrorAction Stop
+
+                $runspaceDataPrime = @{
+                    Parameters                      = $parameters
+                    AzOpsPath                       = "$($script:ModuleRoot)\AzOps.psd1"
+                    StatePath                       = $StatePath
+                    runspace_AzOpsAzManagementGroup = $script:AzOpsAzManagementGroup
+                    runspace_AzOpsSubscriptions     = $script:AzOpsSubscriptions
+                    runspace_AzOpsPartialRoot       = $script:AzOpsPartialRoot
+                    runspace_AzOpsResourceProvider  = $script:AzOpsResourceProvider
+                }
+                #endregion Prepare Input Data For Parallel Processing
+
+                #region Parallel Processing Of Subscriptions
+                $subscriptions | Foreach-Object -ThrottleLimit (Get-PSFConfigValue -FullName 'AzOps.Core.ThrottleLimit') -Parallel {
+                    $subscription = $_
+                    $runspaceDataPrime = $using:runspaceDataPrime
+
+                    Import-Module "$([PSFramework.PSFCore.PSFCoreHost]::ModuleRoot)/PSFramework.psd1"
+                    $azOps = Import-Module $runspaceDataPrime.AzOpsPath -Force -PassThru
+
+                    & $azOps {
+                        $script:AzOpsAzManagementGroup = $runspaceDataPrime.runspace_AzOpsAzManagementGroup
+                        $script:AzOpsSubscriptions = $runspaceDataPrime.runspace_AzOpsSubscriptions
+                        $script:AzOpsPartialRoot = $runspaceDataPrime.runspace_AzOpsPartialRoot
+                        $script:AzOpsResourceProvider = $runspaceDataPrime.runspace_AzOpsResourceProvider
+                    }
+
+                    # Discover resources at subscription scope recursively
+                    & $azOps {
+                        $parameters = $runspaceDataPrime.Parameters
+                        Get-AzOpsResourceDefinition -Scope $subscription.id @parameters
+                    }
+                }
+                #endregion Parallel Processing Of Subscriptions
             }
         }
         else {
             # If no management groups are found, iterate through each subscription
             foreach ($subscription in $script:AzOpsSubscriptions) {
-                $parameters = $PSBoundParameters | ConvertTo-PSFHashtable -Inherit -Include IncludeResourcesInResourceGroup, IncludeResourceType, SkipPim, SkipLock, SkipPolicy, SkipRole, SkipResourceGroup, SkipChildResource, SkipResource, SkipResourceType, ExportRawTemplate, StatePath
                 Get-AzOpsResourceDefinition -Scope $subscription.id @parameters
             }
 

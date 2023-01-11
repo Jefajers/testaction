@@ -29,6 +29,8 @@
             Skip discovery of unsupported child resource types.
         .PARAMETER SkipRole
             Skip discovery of roles for better performance.
+        .PARAMETER SkipRecursiveSubscriptionDiscovery
+            Skip recursive discovery of subscriptions.
         .PARAMETER ExportRawTemplate
             Export generic templates without embedding them in the parameter block.
         .PARAMETER StatePath
@@ -88,6 +90,9 @@
 
         [switch]
         $SkipRole = (Get-PSFConfigValue -FullName 'AzOps.Core.SkipRole'),
+
+        [switch]
+        $SkipRecursiveSubscriptionDiscovery,
 
         [switch]
         $ExportRawTemplate = (Get-PSFConfigValue -FullName 'AzOps.Core.ExportRawTemplate'),
@@ -398,6 +403,9 @@
                 $SkipResource,
 
                 [switch]
+                $SkipRecursiveSubscriptionDiscovery,
+
+                [switch]
                 $ExportRawTemplate,
 
                 [string]
@@ -417,13 +425,14 @@
                 $childOfManagementGroups = ($script:AzOpsAzManagementGroup | Where-Object Name -eq $ScopeObject.ManagementGroup).Children
 
                 foreach ($child in $childOfManagementGroups) {
-
                     if ($child.Type -eq '/subscriptions') {
-                        if ($script:AzOpsSubscriptions.id -contains $child.Id) {
-                            Get-AzOpsResourceDefinition -Scope $child.Id @parameters
-                        }
-                        else {
-                            Write-PSFMessage -Level Warning -String 'Get-AzOpsResourceDefinition.ManagementGroup.Subscription.NotFound' -StringValues $child.Name
+                        if (-not $SkipRecursiveSubscriptionDiscovery) {
+                            if ($script:AzOpsSubscriptions.id -contains $child.Id) {
+                                Get-AzOpsResourceDefinition -Scope $child.Id @parameters
+                            }
+                            else {
+                                Write-PSFMessage -Level Warning -String 'Get-AzOpsResourceDefinition.ManagementGroup.Subscription.NotFound' -StringValues $child.Name
+                            }
                         }
                     }
                     else {
@@ -465,7 +474,7 @@
 
         switch ($scopeObject.Type) {
             subscriptions { ConvertFrom-TypeSubscription -ScopeObject $scopeObject -StatePath $StatePath -ExportRawTemplate:$ExportRawTemplate -Context $context -SkipResourceGroup:$SkipResourceGroup -SkipResource:$SkipResource -SkipResourceType:$SkipResourceType -SkipUnsupportedChildResourceType $SkipUnsupportedChildResourceType -SkipPim:$SkipPim -SkipLock:$SkipLock -SkipPolicy:$SkipPolicy -SkipRole:$SkipRole -ODataFilter $odataFilter -IncludeResourceType $IncludeResourceType -IncludeResourcesInResourceGroup $IncludeResourcesInResourceGroup }
-            managementGroups { ConvertFrom-TypeManagementGroup -ScopeObject $scopeObject -StatePath $StatePath -ExportRawTemplate:$ExportRawTemplate -SkipPim:$SkipPim -SkipPolicy:$SkipPolicy -SkipRole:$SkipRole -SkipResourceGroup:$SkipResourceGroup -SkipResource:$SkipResource }
+            managementGroups { ConvertFrom-TypeManagementGroup -ScopeObject $scopeObject -StatePath $StatePath -ExportRawTemplate:$ExportRawTemplate -SkipPim:$SkipPim -SkipPolicy:$SkipPolicy -SkipRole:$SkipRole -SkipResourceGroup:$SkipResourceGroup -SkipResource:$SkipResource -SkipRecursiveSubscriptionDiscovery:$SkipRecursiveSubscriptionDiscovery }
         }
 
         if ($scopeObject.Type -notin 'resourcegroups', 'subscriptions', 'managementGroups') {
