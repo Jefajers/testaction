@@ -189,7 +189,9 @@
                 Get-AzOpsResourceDefinition -Scope $root @parameters -SkipRecursiveSubscriptionDiscovery
 
                 #region Prepare Input Data For Parallel Processing
-                $query = "resourcecontainers | where type == 'microsoft.resources/subscriptions' | project id, name, subscriptionId, tenantId | order by ['id'] asc"
+                (Get-PSFConfigValue -FullName 'AzOps.Core.ExcludedSubOffer') | ForEach-Object { $ExcludedOffers += ($(if($ExcludedOffers){","}) + "'" + $_  + "'") }
+                (Get-PSFConfigValue -FullName 'AzOps.Core.ExcludedSubState') | ForEach-Object { $ExcludedStates += ($(if($ExcludedStates){","}) + "'" + $_  + "'") }
+                $query = "resourcecontainers | where type == 'microsoft.resources/subscriptions' and properties.subscriptionPolicies.quotaId !in ($ExcludedOffers) and properties.state !in ($ExcludedStates) | project id, name, subscriptionId, tenantId | order by ['id'] asc"
                 $scopeObject = New-AzOpsScope -Scope $root -StatePath $StatePath -ErrorAction Stop
                 $subscriptions = Search-AzOpsAzGraph -ManagementGroup $scopeObject.Name -Query $query -ErrorAction Stop
 
