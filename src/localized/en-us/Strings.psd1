@@ -29,10 +29,6 @@
     'AzOpsScope.GetSubscriptionDisplayName.NotFound'                                = 'Subscription DisplayName not found in Azure. Using directory name instead: {0}' # $subId
     'AzOpsScope.Input.FromFileName.ManagementGroup'                                 = 'Determining management group name from file name {0}' # ($children.FullName -join ', ')
     'AzOpsScope.Input.FromFileName.Subscription'                                    = 'Determining subscription name from file name {0}' # ($children.FullName -join ', ')
-    'AzOpsScope.Input.FromFileName.ResourceGroup'                                   = 'Determining resource group name from file name {0}' # ($children.FullName -join ', ')
-    'AzOpsScope.Input.BadData.ManagementGroup'                                      = '{0} does not contain .parameters.input.value.Id' # ($children.FullName -join ', ')
-    'AzOpsScope.Input.BadData.ResourceGroup'                                        = 'Invalid resource Group Data! Validate integrity of {0}' # ($children.FullName -join ', ')
-    'AzOpsScope.Input.BadData.Subscription'                                         = 'Invalid Subscription Data! Validate integrity of {0}' # ($children.FullName -join ', ')
     'AzOpsScope.Input.BadData.UnknownType'                                          = 'Invalid File Structure! Cannot find Management Group / Subscription / Resource Group files in {0}!' # $Path
     'AzOpsScope.Input.BadData.TemplateParameterFile'                                = 'Unable to determine type from Template or Template Parameter file: {0}' # filename
     'AzOpsScope.Constructor'                                                        = 'Calling Constructor with value {0}' # scope
@@ -61,14 +57,10 @@
     'ConvertTo-AzOpsState.Exporting.Default'                                        = 'Exporting input resource to AzOpsState to {0}' # $resourceData.ObjectFilePath
     'ConvertTo-AzOpsState.File.Create'                                              = 'AzOpsState file not found. Creating new: {0}' # $ObjectFilePath
     'ConvertTo-AzOpsState.File.InvalidCharacter'                                    = 'The specified AzOpsState file contains invalid characters (remove any "[" or "]" characters)! Skipping {0}' # $ObjectFilePath
-    'ConvertTo-AzOpsState.File.JQError'                                             = 'Jq filter error {0}' # $Resource.ObjectFilePath
     'ConvertTo-AzOpsState.File.UseExisting'                                         = 'AzOpsState file is found. Using existing file: {0}' # $ObjectFilePath
     'ConvertTo-AzOpsState.NoExportPath'                                             = 'No export path found for {0}. Ensure the original data type remains intact or specify an -ExportPath' # $Resource
     'ConvertTo-AzOpsState.Processing'                                               = 'Processing input: {0}' # $Resource
-    'ConvertTo-AzOpsState.ResourceError'                                            = 'Error processing resource: {0}' # $Resource
     'ConvertTo-AzOpsState.Starting'                                                 = 'Starting conversion to AzOps State object' #
-    'ConvertTo-AzOpsState.StateConfig.Error'                                        = 'Cannot load {0}, is the json schema valid and does the file exist?' # (Get-PSFConfigValue -FullName 'AzOps.General.StateConfig')
-    'ConvertTo-AzOpsState.StatePath'                                                = 'Resolve path to resource state {0}' # $resourceData.ObjectFilePath
     'ConvertTo-AzOpsState.GenerateTemplateParameter'                                = 'Generating template parameter: {0}' # $generateTemplateParameter
     'ConvertTo-AzOpsState.GenerateTemplate'                                         = 'Generating template: {0}' # $generateTemplateParameter
     'ConvertTo-AzOpsState.GenerateTemplate.ProviderNamespace'                       = 'Provider namespace: {0}' # $providerNamespace
@@ -110,9 +102,6 @@
     'Get-AzOpsResourceDefinition.ManagementGroup.Processing'                        = 'Processing Management Group [{0}] ({1})' # $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup
     'Get-AzOpsResourceDefinition.Processing.Detail'                                 = 'Processing detail: {0} for [{1}]' # 'Policy Definitions', $scopeObject.Scope
     'Get-AzOpsResourceDefinition.Processing.NotFound'                               = 'Scope [{0}] not found in Azure or is excluded' # $Scope
-    'Get-AzOpsResourceDefinition.ResourceGroup.Processing'                          = 'Processing resource Group [{0}] in Subscription [{1}] ({2})' # $ScopeObject.Resourcegroup, $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription
-    'Get-AzOpsResourceDefinition.ResourceGroup.Processing.Error'                    = 'Failed to access resource Group [{0}] in Subscription [{1}] ({2})' # $ScopeObject.Resourcegroup, $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription
-    'Get-AzOpsResourceDefinition.ResourceGroup.Processing.Owned'                    = 'Skipping {0} as it is managed by {1}' # $resourceGroup.ResourceGroupName, $resourceGroup.ManagedBy
     'Get-AzOpsResourceDefinition.NoResourceGroup'                                   = 'No non-managed resource Group found in [{0}])' # $scopeObject.Name
     'Get-AzOpsResourceDefinition.Subscription.Processing'                           = 'Processing Subscription [{0}] ({1})' # $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription
     'Get-AzOpsResourceDefinition.Processing.Resource'                               = 'Processing resource [{0}] in resource Group [{1}]' # $resource.Name, $resourceGroup.ResourceGroupName
@@ -266,7 +255,6 @@
     'Save-AzOpsManagementGroupChildren.Data.StatePath'                              = 'Resolved state path: {0}' # $scopeStatepath
     'Save-AzOpsManagementGroupChildren.Moving.Destination'                          = 'Moved existing state file to: {0}' # $statepathScopeDirectoryParent
     'Save-AzOpsManagementGroupChildren.Moving.Source'                               = 'Found existing state file in directory: {0}' # $exisitingScopePath
-    'Save-AzOpsManagementGroupChildren.New.File'                                    = 'Creating new state file: {0}' # $statepathFileName
     'Save-AzOpsManagementGroupChildren.Processing'                                  = 'Processing Scope: {0}' # $scopeObject.Scope
     'Save-AzOpsManagementGroupChildren.Starting'                                    = 'Starting execution' #
     'Save-AzOpsManagementGroupChildren.Subscription.NotFound'                       = 'Unable to locate subscription: {0} within AzOpsSubscriptions object' #child.Name
@@ -277,9 +265,7 @@
 
     'Set-AzOpsContext.Change'                                                       = 'Changing active subscription from {0} to {1} ({2})' # $context.Subscription.Name, $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription
 
-    'Set-AzOpsStringLength.IsString'                                                = 'Is string {0}' # $String
     'Set-AzOpsStringLength.Shortened'                                               = 'New shortened string {0} in-line with limit of {1}' # $String, $MaxStringLength
-    'Set-AzOpsStringLength.StringIsPath'                                            = 'String contains state path {0}' # $String
     'Set-AzOpsStringLength.ToLong'                                                  = 'String {0} exceeding limit of {1} by {2} characters' # $String, $MaxStringLength, $overSize
     'Set-AzOpsStringLength.WithInLimit'                                             = 'String {0} within limit of {1}' # $String
 
