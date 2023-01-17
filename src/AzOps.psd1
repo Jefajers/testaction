@@ -52,10 +52,10 @@ PowerShellVersion = '7.2'
 
 # Modules that must be imported into the global environment prior to importing this module
 RequiredModules = @(@{ModuleName = 'PSFramework'; RequiredVersion = '1.7.249'; }, 
-               @{ModuleName = 'Az.Accounts'; RequiredVersion = '2.11.1'; }, 
+               @{ModuleName = 'Az.Accounts'; RequiredVersion = '2.10.3'; }, 
                @{ModuleName = 'Az.Billing'; RequiredVersion = '2.0.0'; }, 
                @{ModuleName = 'Az.ResourceGraph'; RequiredVersion = '0.13.0'; }, 
-               @{ModuleName = 'Az.Resources'; RequiredVersion = '6.5.1'; })
+               @{ModuleName = 'Az.Resources'; RequiredVersion = '6.4.1'; })
 
 # Assemblies that must be loaded prior to importing this module
 # RequiredAssemblies = @()
