@@ -100,7 +100,7 @@
     begin {
         # Set variables for retry with exponential backoff
         $backoffMultiplier = 2
-        $maxRetryCount = 6
+        $maxRetryCount = 3
         # Logging output metadata
         $common = @{
             FunctionName = 'Get-AzOpsResourceDefinition'
@@ -191,7 +191,7 @@
         }
         #region Process Resource Groups
         if ($SkipResourceGroup) {
-            Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Subscription.SkippingResourceGroup'
+            Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.SkippingResourceGroup'
         }
         else {
             if ((Get-PSFConfigValue -FullName 'AzOps.Core.SubscriptionsToIncludeResourceGroups') -ne '*') {
@@ -213,7 +213,7 @@
                 # Loop resource groups
                 foreach ($resourceGroup in $resourceGroups) {
                     # Convert resourceGroup to AzOpsState
-                    Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Subscription.Processing.ResourceGroup' -StringValues $resourceGroup.name -Target $resourceGroup
+                    Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.ResourceGroup' -StringValues $resourceGroup.name -Target $resourceGroup
                     ConvertTo-AzOpsState -Resource $resourceGroup -ExportRawTemplate:$ExportRawTemplate -StatePath $Statepath
                 }
                 # Process resource groups parallel
@@ -256,6 +256,9 @@
                     }
                 }
             }
+            else {
+                Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.NoResourceGroup' -StringValues $scopeObject.Name
+            }
             #region Process Policies
             if (-not $SkipPolicy) {
                 if ($subscriptionsToIncludeResourceGroups) {
@@ -267,31 +270,45 @@
             }
             #endregion Process Policies
             if (-not $SkipResource) {
-                $SkipResourceType | ForEach-Object { $skipResourceTypes += ($(if($skipResourceTypes){","}) + "'" + $_  + "'") }
-                $IncludeResourceType | ForEach-Object { $includeResourceTypes += ($(if($includeResourceTypes){","}) + "'" + $_  + "'") }
-                if ($IncludeResourceType -eq "*") {
-                    $query = "resources | where subscriptionId in ($subscriptionIds) and type !in ($skipResourceTypes) | order by ['id'] asc"
+                Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.Resource.Discovery' -StringValues $scopeObject.Name
+                try {
+                    $SkipResourceType | ForEach-Object { $skipResourceTypes += ($(if($skipResourceTypes){","}) + "'" + $_  + "'") }
+                    $IncludeResourceType | ForEach-Object { $includeResourceTypes += ($(if($includeResourceTypes){","}) + "'" + $_  + "'") }
+                    if ($IncludeResourceType -eq "*") {
+                        $query = "resources | where subscriptionId in ($subscriptionIds) and type !in ($skipResourceTypes) | order by ['id'] asc"
+                    }
+                    else {
+                        $query = "resources | where subscriptionId in ($subscriptionIds) and type !in ($skipResourceTypes) and type in ($includeResourceTypes) | order by ['id'] asc"
+                    }
+                    switch ($scopeObject.Type) {
+                        subscriptions {
+                            $resourcesBase = Search-AzOpsAzGraph -SubscriptionId $scopeObject.Name -Query $query -ErrorAction Stop
+                        }
+                        managementGroups {
+                            $resourcesBase = Search-AzOpsAzGraph -ManagementGroup $scopeObject.Name -Query $query -ErrorAction Stop
+                        }
+                    }
+                }
+                catch {
+                    Write-PSFMessage -Level Warning @common -String 'Get-AzOpsResourceDefinition.Processing.Resource.Warning' -StringValues $scopeObject.Name
+                }
+                if ($resourcesBase) {
+                    $resources = @()
+                    foreach ($resource in $resourcesBase) {
+                        if ($resourceGroups | Where-Object { $_.name -eq $resource.resourceGroup -and $_.subscriptionId -eq $resource.subscriptionId } ) {
+                            # Convert resources to AzOpsState
+                            Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.Resource' -StringValues $resource.name, $resource.resourcegroup -Target $resource
+                            $resources += $resource
+                            ConvertTo-AzOpsState -Resource $resource -ExportRawTemplate:$ExportRawTemplate -StatePath $Statepath
+                        }
+                    }
                 }
                 else {
-                    $query = "resources | where subscriptionId in ($subscriptionIds) and type !in ($skipResourceTypes) and type in ($includeResourceTypes) | order by ['id'] asc"
+                    Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.Resource.Discovery.NotFound' -StringValues $scopeObject.Name
                 }
-                switch ($scopeObject.Type) {
-                    subscriptions {
-                        $resourcesBase = Search-AzOpsAzGraph -SubscriptionId $scopeObject.Name -Query $query -ErrorAction Stop
-                    }
-                    managementGroups {
-                        $resourcesBase = Search-AzOpsAzGraph -ManagementGroup $scopeObject.Name -Query $query -ErrorAction Stop
-                    }
-                }
-                $resources = @()
-                foreach ($resource in $resourcesBase) {
-                    if ($resourceGroups | Where-Object { $_.name -eq $resource.resourceGroup -and $_.subscriptionId -eq $resource.subscriptionId } ) {
-                        # Convert resources to AzOpsState
-                        Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Subscription.Processing.Resource' -StringValues $resource.name, $resource.resourcegroup -Target $resource
-                        $resources += $resource
-                        ConvertTo-AzOpsState -Resource $resource -ExportRawTemplate:$ExportRawTemplate -StatePath $Statepath
-                    }
-                }
+            }
+            else {
+                Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.SkippingResources'
             }
             if (-not $SkipResource -and -not $SkipChildResource) {
                 # Process resource scope in parallel looking for childResource
@@ -336,7 +353,7 @@
                         $resourceGroup = $using:resourceGroups | Where-Object {$_.subscriptionId -eq $resource.subscriptionId -and $_.name -eq $resource.resourceGroup}
                         foreach ($exportResource in $exportResources) {
                             if (-not(($resource.name -eq $exportResource.name) -and ($resource.type -eq $exportResource.type))) {
-                                Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.Subscription.Processing.ChildResource' -StringValues $exportResource.name, $resource.resourceGroup -Target $exportResource
+                                Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.Processing.ChildResource' -StringValues $exportResource.name, $resource.resourceGroup -Target $exportResource
                                 $ChildResource = @{
                                     resourceProvider = $exportResource.type -replace '/', '_'
                                     resourceName     = $exportResource.name -replace '/', '_'
@@ -361,7 +378,7 @@
                 }
             }
             else {
-                Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Subscription.SkippingChildResource'
+                Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.SkippingChildResources'
             }
         }
         #endregion Process Resource Groups
