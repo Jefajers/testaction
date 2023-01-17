@@ -17,7 +17,13 @@
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [Object]
-        $ScopeObject
+        $ScopeObject,
+        [Parameter(Mandatory = $true)]
+        $SubscriptionIds,
+        [Parameter(Mandatory = $false)]
+        $SubscriptionsToIncludeResourceGroups,
+        [Parameter(Mandatory = $false)]
+        $ResourceGroups
     )
 
     process {
@@ -28,7 +34,15 @@
         switch ($ScopeObject.Type) {
             managementGroups {
                 Write-PSFMessage -Level Important -String 'Get-AzOpsPolicyAssignment.ManagementGroup' -StringValues $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup -Target $ScopeObject
-                $query = "policyresources | where type == 'microsoft.authorization/policyassignments' and resourceGroup == '' and subscriptionId == '' | where id startswith '$($ScopeObject.Scope)' | order by ['id'] asc"
+                if ($SubscriptionsToIncludeResourceGroups -and $ResourceGroups) {
+                    $query = "policyresources | where type == 'microsoft.authorization/policyassignments' and subscriptionId in ($SubscriptionsToIncludeResourceGroups) and resourceGroup in ($ResourceGroups) | order by ['id'] asc"
+                }
+                elseif ($SubscriptionIds -and $ResourceGroups) {
+                    $query = "policyresources | where type == 'microsoft.authorization/policyassignments' and subscriptionId in ($SubscriptionIds) and resourceGroup in ($ResourceGroups) | order by ['id'] asc"
+                }
+                else {
+                    $query = "policyresources | where type == 'microsoft.authorization/policyassignments' and resourceGroup == '' | where subscriptionId == '' or subscriptionId in ($SubscriptionIds) | order by ['id'] asc"
+                }
                 Search-AzOpsAzGraph -ManagementGroup $ScopeObject.Name -Query $query -ErrorAction Stop
             }
             subscriptions {

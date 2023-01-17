@@ -184,50 +184,7 @@
             foreach ($root in $rootScope) {
                 # Create AzOpsState structure recursively
                 Save-AzOpsManagementGroupChildren -Scope $root -StatePath $StatePath
-
-                # Discover resources at managementgroup scope
-                Get-AzOpsResourceDefinition -Scope $root @parameters -SkipRecursiveSubscriptionDiscovery
-
-                #region Prepare Input Data For Parallel Processing
-                (Get-PSFConfigValue -FullName 'AzOps.Core.ExcludedSubOffer') | ForEach-Object { $ExcludedOffers += ($(if($ExcludedOffers){","}) + "'" + $_  + "'") }
-                (Get-PSFConfigValue -FullName 'AzOps.Core.ExcludedSubState') | ForEach-Object { $ExcludedStates += ($(if($ExcludedStates){","}) + "'" + $_  + "'") }
-                $query = "resourcecontainers | where type == 'microsoft.resources/subscriptions' and properties.subscriptionPolicies.quotaId !in ($ExcludedOffers) and properties.state !in ($ExcludedStates) | project id, name, subscriptionId, tenantId | order by ['id'] asc"
-                $scopeObject = New-AzOpsScope -Scope $root -StatePath $StatePath -ErrorAction Stop
-                $subscriptions = Search-AzOpsAzGraph -ManagementGroup $scopeObject.Name -Query $query -ErrorAction Stop
-
-                $runspaceDataPrime = @{
-                    Parameters                      = $parameters
-                    AzOpsPath                       = "$($script:ModuleRoot)\AzOps.psd1"
-                    StatePath                       = $StatePath
-                    runspace_AzOpsAzManagementGroup = $script:AzOpsAzManagementGroup
-                    runspace_AzOpsSubscriptions     = $script:AzOpsSubscriptions
-                    runspace_AzOpsPartialRoot       = $script:AzOpsPartialRoot
-                    runspace_AzOpsResourceProvider  = $script:AzOpsResourceProvider
-                }
-                #endregion Prepare Input Data For Parallel Processing
-
-                #region Parallel Processing Of Subscriptions
-                $subscriptions | Foreach-Object -ThrottleLimit (Get-PSFConfigValue -FullName 'AzOps.Core.ThrottleLimit') -Parallel {
-                    $subscription = $_
-                    $runspaceDataPrime = $using:runspaceDataPrime
-
-                    Import-Module "$([PSFramework.PSFCore.PSFCoreHost]::ModuleRoot)/PSFramework.psd1"
-                    $azOps = Import-Module $runspaceDataPrime.AzOpsPath -Force -PassThru
-
-                    & $azOps {
-                        $script:AzOpsAzManagementGroup = $runspaceDataPrime.runspace_AzOpsAzManagementGroup
-                        $script:AzOpsSubscriptions = $runspaceDataPrime.runspace_AzOpsSubscriptions
-                        $script:AzOpsPartialRoot = $runspaceDataPrime.runspace_AzOpsPartialRoot
-                        $script:AzOpsResourceProvider = $runspaceDataPrime.runspace_AzOpsResourceProvider
-                    }
-
-                    # Discover resources at subscription scope recursively
-                    & $azOps {
-                        $parameters = $runspaceDataPrime.Parameters
-                        Get-AzOpsResourceDefinition -Scope $subscription.id @parameters
-                    }
-                }
-                #endregion Parallel Processing Of Subscriptions
+                Get-AzOpsResourceDefinition -Scope $root @parameters
             }
         }
         else {
@@ -235,7 +192,6 @@
             foreach ($subscription in $script:AzOpsSubscriptions) {
                 Get-AzOpsResourceDefinition -Scope $subscription.id @parameters
             }
-
         }
         #endregion Root Scopes
     }

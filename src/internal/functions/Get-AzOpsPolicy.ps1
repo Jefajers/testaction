@@ -14,28 +14,37 @@
         [Object]
         $ScopeObject,
         [Parameter(Mandatory = $true)]
-        $StatePath
+        $StatePath,
+        [Parameter(Mandatory = $false)]
+        $SubscriptionIds,
+        [Parameter(Mandatory = $false)]
+        $SubscriptionsToIncludeResourceGroups,
+        [Parameter(Mandatory = $false)]
+        $ResourceGroups
     )
 
     process {
-        # Process policy definitions
-        Write-PSFMessage -Level Verbose -String 'Get-AzOpsResourceDefinition.Processing.Detail' -StringValues 'Policy Definitions', $scopeObject.Scope
-        $policyDefinitions = Get-AzOpsPolicyDefinition -ScopeObject $ScopeObject
-        $policyDefinitions | ConvertTo-AzOpsState -StatePath $StatePath
+        if ($ResourceGroups) {
+            # Process policy assignments
+            Write-PSFMessage -Level Verbose -String 'Get-AzOpsResourceDefinition.Processing.Detail' -StringValues 'Policy Assignments', $ScopeObject.Scope
+            $policyAssignments = Get-AzOpsPolicyAssignment -ScopeObject $ScopeObject -SubscriptionIds $SubscriptionIds -SubscriptionsToIncludeResourceGroups $SubscriptionsToIncludeResourceGroups -ResourceGroups $ResourceGroups
+            $policyAssignments | ConvertTo-AzOpsState -StatePath $StatePath
+        }
+        else {
+            # Process policy definitions
+            Write-PSFMessage -Level Verbose -String 'Get-AzOpsResourceDefinition.Processing.Detail' -StringValues 'Policy Definitions', $scopeObject.Scope
+            $policyDefinitions = Get-AzOpsPolicyDefinition -ScopeObject $ScopeObject -SubscriptionIds $SubscriptionIds
+            $policyDefinitions | ConvertTo-AzOpsState -StatePath $StatePath
 
-        # Process policy set definitions (initiatives)
-        Write-PSFMessage -Level Verbose -String 'Get-AzOpsResourceDefinition.Processing.Detail' -StringValues 'Policy Set Definitions', $ScopeObject.Scope
-        $policySetDefinitions = Get-AzOpsPolicySetDefinition -ScopeObject $ScopeObject
-        $policySetDefinitions | ConvertTo-AzOpsState -StatePath $StatePath
+            # Process policy set definitions (initiatives)
+            Write-PSFMessage -Level Verbose -String 'Get-AzOpsResourceDefinition.Processing.Detail' -StringValues 'Policy Set Definitions', $ScopeObject.Scope
+            $policySetDefinitions = Get-AzOpsPolicySetDefinition -ScopeObject $ScopeObject -SubscriptionIds $SubscriptionIds
+            $policySetDefinitions | ConvertTo-AzOpsState -StatePath $StatePath
 
-        # Process policy assignments
-        Write-PSFMessage -Level Verbose -String 'Get-AzOpsResourceDefinition.Processing.Detail' -StringValues 'Policy Assignments', $ScopeObject.Scope
-        $policyAssignments = Get-AzOpsPolicyAssignment -ScopeObject $ScopeObject
-        $policyAssignments | ConvertTo-AzOpsState -StatePath $StatePath
-
-        # Process policy exemptions
-        Write-PSFMessage -Level Verbose -String 'Get-AzOpsResourceDefinition.Processing.Detail' -StringValues 'Policy Exemptions', $ScopeObject.Scope
-        $policyExemptions = Get-AzOpsPolicyExemption -ScopeObject $ScopeObject
-        $policyExemptions | ConvertTo-AzOpsState -StatePath $StatePath
+            # Process policy assignments
+            Write-PSFMessage -Level Verbose -String 'Get-AzOpsResourceDefinition.Processing.Detail' -StringValues 'Policy Assignments', $ScopeObject.Scope
+            $policyAssignments = Get-AzOpsPolicyAssignment -ScopeObject $ScopeObject -SubscriptionIds $SubscriptionIds -SubscriptionsToIncludeResourceGroups $SubscriptionsToIncludeResourceGroups
+            $policyAssignments | ConvertTo-AzOpsState -StatePath $StatePath
+        }
     }
 }

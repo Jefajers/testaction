@@ -128,7 +128,7 @@
     'Get-AzOpsResourceDefinition.Subscription.ExcludeResourceGroup'                 = 'Subscription is skipped due to SubscriptionsToIncludeResourceGroups' #
     'Get-AzOpsResourceDefinition.Subscription.SkippingResources'                    = 'Resources are skipped in resource group due to SkipResource.' #
     'Get-AzOpsResourceDefinition.Subscription.Processing.ChildResource'             = 'Processing resource [{0}] in resource Group [{1}]' # $resource.Name, $resourceGroup.ResourceGroupName
-    'Get-AzOpsResourceDefinition.Subscription.SkippingChildResource'                = 'Child resources are skipped in resource group {0} due to SkipChildResource' # $resourceGroup.ResourceGroupName
+    'Get-AzOpsResourceDefinition.Subscription.SkippingChildResource'                = 'Child resources are skipped, due to SkipChildResource' #
     'Get-AzOpsRoleAssignment.Assignment'                                            = 'Found assignment {0} for role {1}' # $roleAssignment.DisplayName, $roleAssignment.RoleDefinitionName
     'Get-AzOpsRoleAssignment.Processing'                                            = 'Retrieving Role Assignments at scope {0}' # $ScopeObject
 

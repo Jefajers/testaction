@@ -95,7 +95,9 @@
                 }
             }
             subscriptions {
-                ConvertTo-AzOpsState -Resource ($script:AzOpsAzManagementGroup.children | Where-Object Name -eq $scopeObject.name) -ExportPath $scopeObject.statepath -StatePath $StatePath
+                if (($script:AzOpsAzManagementGroup.children | Where-Object Name -eq $scopeObject.name)) {
+                    ConvertTo-AzOpsState -Resource ($script:AzOpsAzManagementGroup.children | Where-Object Name -eq $scopeObject.name) -ExportPath $scopeObject.statepath -StatePath $StatePath
+                }
             }
         }
     }
