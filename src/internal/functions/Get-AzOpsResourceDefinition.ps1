@@ -2,9 +2,9 @@
 
     <#
         .SYNOPSIS
-            This cmdlet recursively discovers resources (Management Groups, Subscriptions, Resource Groups, Resources, Privileged Identity Management resources, Policies, Role Assignments) from the provided input scope.
+            This cmdlet discovers resources (Management Groups, Subscriptions, Resource Groups, Resources, Privileged Identity Management resources, Policies, Role Assignments) from the provided input scope.
         .DESCRIPTION
-            This cmdlet recursively discovers resources (Management Groups, Subscriptions, Resource Groups, Resources, Privileged Identity Management resources, Policies, Role Assignments) from the provided input scope.
+            This cmdlet discovers resources (Management Groups, Subscriptions, Resource Groups, Resources, Privileged Identity Management resources, Policies, Role Assignments) from the provided input scope.
         .PARAMETER Scope
             Discovery Scope
         .PARAMETER IncludeResourcesInResourceGroup
@@ -210,13 +210,11 @@
             }
             $resourceGroups.resourceGroup | ForEach-Object { $resourceGroupsString += ($(if($resourceGroupsString){","}) + "'" + $_  + "'") }
             if ($resourceGroups) {
-                # Loop resource groups
                 foreach ($resourceGroup in $resourceGroups) {
-                    # Convert resourceGroup to AzOpsState
                     Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.ResourceGroup' -StringValues $resourceGroup.name -Target $resourceGroup
                     ConvertTo-AzOpsState -Resource $resourceGroup -ExportRawTemplate:$ExportRawTemplate -StatePath $Statepath
                 }
-                # Process resource groups parallel
+                # Process resource groups in parallel
                 $resourceGroups | Foreach-Object -ThrottleLimit (Get-PSFConfigValue -FullName 'AzOps.Core.ThrottleLimit') -Parallel {
                     $resourceGroup = $_
                     $runspaceData = $using:runspaceData
@@ -234,7 +232,7 @@
                         $script:AzOpsPartialRoot = $runspaceData.runspace_AzOpsPartialRoot
                         $script:AzOpsResourceProvider = $runspaceData.runspace_AzOpsResourceProvider
                     }
-                    #region Process Privileged Identity Management resources, Policies, Locks and Roles at RG scope
+                    # Process Privileged Identity Management resources, Policies, Locks and Roles at resource group scope
                     if ((-not $using:SkipPim) -or (-not $using:SkipPolicy) -or (-not $using:SkipRole) -or (-not $using:SkipLock)) {
                         & $azOps {
                             $rgScopeObject = New-AzOpsScope -Scope $resourceGroup.id -StatePath $runspaceData.Statepath -ErrorAction Stop
@@ -259,7 +257,7 @@
             else {
                 Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.NoResourceGroup' -StringValues $scopeObject.Name
             }
-            #region Process Policies
+            # Process Policies at resource group scope
             if (-not $SkipPolicy) {
                 if ($subscriptionsToIncludeResourceGroups) {
                     Get-AzOpsPolicy -ScopeObject $scopeObject -SubscriptionId $subscriptionIds -SubscriptionsToIncludeResourceGroups $subscriptionsToIncludeResourceGroups -ResourceGroups $resourceGroupsString -StatePath $StatePath
@@ -268,7 +266,7 @@
                     Get-AzOpsPolicy -ScopeObject $scopeObject -SubscriptionId $subscriptionIds -ResourceGroups $resourceGroupsString -StatePath $StatePath
                 }
             }
-            #endregion Process Policies
+            # Process Resources at resource group scope
             if (-not $SkipResource) {
                 Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.Resource.Discovery' -StringValues $scopeObject.Name
                 try {
@@ -296,7 +294,6 @@
                     $resources = @()
                     foreach ($resource in $resourcesBase) {
                         if ($resourceGroups | Where-Object { $_.name -eq $resource.resourceGroup -and $_.subscriptionId -eq $resource.subscriptionId } ) {
-                            # Convert resources to AzOpsState
                             Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.Resource' -StringValues $resource.name, $resource.resourcegroup -Target $resource
                             $resources += $resource
                             ConvertTo-AzOpsState -Resource $resource -ExportRawTemplate:$ExportRawTemplate -StatePath $Statepath
@@ -310,8 +307,8 @@
             else {
                 Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.SkippingResources'
             }
+            # Process resources as scope in parallel, look for childResource
             if (-not $SkipResource -and -not $SkipChildResource) {
-                # Process resource scope in parallel looking for childResource
                 $resources | Foreach-Object -ThrottleLimit (Get-PSFConfigValue -FullName 'AzOps.Core.ThrottleLimit') -Parallel {
                     $resource = $_
                     $runspaceData = $using:runspaceData
@@ -383,13 +380,12 @@
         }
         #endregion Process Resource Groups
 
-        #region Process Policies
+        # Process Policies at subscription scope
         if (-not $SkipPolicy) {
             Get-AzOpsPolicy -ScopeObject $scopeObject -SubscriptionIds $subscriptionIds -StatePath $StatePath
         }
-        #endregion Process Policies
+        # Process subscription scope in parallel
         if ($subscriptions) {
-            # Process subscription scope in parallel
             $subscriptions | Foreach-Object -ThrottleLimit (Get-PSFConfigValue -FullName 'AzOps.Core.ThrottleLimit') -Parallel {
                 $subscription = $_
                 $runspaceData = $using:runspaceData
@@ -401,7 +397,7 @@
 
                 Import-Module "$([PSFramework.PSFCore.PSFCoreHost]::ModuleRoot)/PSFramework.psd1"
                 $azOps = Import-Module $runspaceData.AzOpsPath -Force -PassThru
-                # endregion Importing module
+
                 & $azOps {
                     $script:AzOpsAzManagementGroup = $runspaceData.runspace_AzOpsAzManagementGroup
                     $script:AzOpsSubscriptions = $runspaceData.runspace_AzOpsSubscriptions
