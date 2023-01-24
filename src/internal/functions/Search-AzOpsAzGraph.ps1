@@ -9,6 +9,9 @@
             Subscription Id
         .PARAMETER Query
             AzureResourceGraph-Query
+        .EXAMPLE
+            > Search-AzOpsAzGraph -ManagementGroupName "5663f39e-feb1-4303-a1f9-cf20b702de61" -Query "policyresources | where type == 'microsoft.authorization/policyassignments'"
+            Discover all policy assignments deployed at Management Group scope and below
     #>
 
     [CmdletBinding()]

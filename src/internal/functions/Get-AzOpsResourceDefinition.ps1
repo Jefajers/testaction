@@ -145,9 +145,9 @@
             managementGroups {
                 Write-PSFMessage -Level Important @common -String 'Get-AzOpsResourceDefinition.ManagementGroup.Processing' -StringValues $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup
                 $query = "resourcecontainers | where type == 'microsoft.management/managementgroups' | order by ['id'] asc"
-                $managementgroups = Search-AzOpsAzGraph -ManagementGroup $scopeObject.Name -Query $query -ErrorAction Stop | Where-Object { $_.id -in $script:AzOpsAzManagementGroup.Id }
+                $managementgroups = Search-AzOpsAzGraph -ManagementGroupName $scopeObject.Name -Query $query -ErrorAction Stop | Where-Object { $_.id -in $script:AzOpsAzManagementGroup.Id }
                 $query = "resourcecontainers | where type == 'microsoft.resources/subscriptions' and properties.subscriptionPolicies.quotaId !in ($ExcludedOffers) and properties.state !in ($ExcludedStates) | order by ['id'] asc"
-                $subscriptions = Search-AzOpsAzGraph -ManagementGroup $scopeObject.Name -Query $query -ErrorAction Stop | Where-Object { $_.id -in $script:AzOpsSubscriptions.id }
+                $subscriptions = Search-AzOpsAzGraph -ManagementGroupName $scopeObject.Name -Query $query -ErrorAction Stop | Where-Object { $_.id -in $script:AzOpsSubscriptions.id }
                 $subscriptions.subscriptionId | ForEach-Object { $subscriptionIds += ($(if($subscriptionIds){","}) + "'" + $_  + "'") }
                 if ($managementgroups) {
                     # Process managementGroup scope in parallel
@@ -260,7 +260,7 @@
                     $resourceGroups = Search-AzOpsAzGraph -SubscriptionId $scopeObject.Name -Query $query -ErrorAction Stop
                 }
                 managementGroups {
-                    $resourceGroups = Search-AzOpsAzGraph -ManagementGroup $scopeObject.Name -Query $query -ErrorAction Stop
+                    $resourceGroups = Search-AzOpsAzGraph -ManagementGroupName $scopeObject.Name -Query $query -ErrorAction Stop
                 }
             }
             $resourceGroups.resourceGroup | ForEach-Object { $resourceGroupsString += ($(if($resourceGroupsString){","}) + "'" + $_  + "'") }
@@ -338,7 +338,7 @@
                             $resourcesBase = Search-AzOpsAzGraph -SubscriptionId $scopeObject.Name -Query $query -ErrorAction Stop
                         }
                         managementGroups {
-                            $resourcesBase = Search-AzOpsAzGraph -ManagementGroup $scopeObject.Name -Query $query -ErrorAction Stop
+                            $resourcesBase = Search-AzOpsAzGraph -ManagementGroupName $scopeObject.Name -Query $query -ErrorAction Stop
                         }
                     }
                 }

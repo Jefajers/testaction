@@ -43,7 +43,7 @@
                 else {
                     $query = "policyresources | where type == 'microsoft.authorization/policyassignments' and resourceGroup == '' | where subscriptionId == '' or subscriptionId in ($SubscriptionIds) | order by ['id'] asc"
                 }
-                Search-AzOpsAzGraph -ManagementGroup $ScopeObject.Name -Query $query -ErrorAction Stop
+                Search-AzOpsAzGraph -ManagementGroupName $ScopeObject.Name -Query $query -ErrorAction Stop
             }
             subscriptions {
                 Write-PSFMessage -Level Important -String 'Get-AzOpsPolicyAssignment.Subscription' -StringValues $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription -Target $ScopeObject
