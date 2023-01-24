@@ -168,7 +168,7 @@
                             $script:AzOpsPartialRoot = $runspaceData.runspace_AzOpsPartialRoot
                             $script:AzOpsResourceProvider = $runspaceData.runspace_AzOpsResourceProvider
                         }
-                        #region Process Privileged Identity Management resources, Policies and Roles at managementGroup scope
+                        # Process Privileged Identity Management resources, Policies and Roles at managementGroup scope
                         if ((-not $using:SkipPim) -or (-not $using:SkipPolicy) -or (-not $using:SkipRole)) {
                             & $azOps {
                                 $ScopeObject = New-AzOpsScope -Scope $managementgroup.id -StatePath $runspaceData.Statepath -ErrorAction Stop
@@ -189,9 +189,64 @@
                 }
             }
         }
+        #region Process Policies at subscription scope
+        if (-not $SkipPolicy -and $subscriptions) {
+            Get-AzOpsPolicy -ScopeObject $scopeObject -SubscriptionIds $subscriptionIds -StatePath $StatePath
+        }
+        #endregion Process Policies at subscription scope
+
+        #region Process subscription scope in parallel
+        if ($subscriptions) {
+            $subscriptions | Foreach-Object -ThrottleLimit (Get-PSFConfigValue -FullName 'AzOps.Core.ThrottleLimit') -Parallel {
+                $subscription = $_
+                $runspaceData = $using:runspaceData
+
+                $msgCommon = @{
+                    FunctionName = $using:common.FunctionName
+                    ModuleName   = 'AzOps'
+                }
+
+                Import-Module "$([PSFramework.PSFCore.PSFCoreHost]::ModuleRoot)/PSFramework.psd1"
+                $azOps = Import-Module $runspaceData.AzOpsPath -Force -PassThru
+
+                & $azOps {
+                    $script:AzOpsAzManagementGroup = $runspaceData.runspace_AzOpsAzManagementGroup
+                    $script:AzOpsSubscriptions = $runspaceData.runspace_AzOpsSubscriptions
+                    $script:AzOpsPartialRoot = $runspaceData.runspace_AzOpsPartialRoot
+                    $script:AzOpsResourceProvider = $runspaceData.runspace_AzOpsResourceProvider
+                }
+                # Process Privileged Identity Management resources, Policies, Locks and Roles at subscription scope
+                if ((-not $using:SkipPim) -or (-not $using:SkipPolicy) -or (-not $using:SkipLock) -or (-not $using:SkipRole)) {
+                    & $azOps {
+                        $scopeObject = New-AzOpsScope -Scope $subscription.id -StatePath $runspaceData.Statepath -ErrorAction Stop
+                        if (-not $using:SkipPim) {
+                            Get-AzOpsPim -ScopeObject $scopeObject -StatePath $runspaceData.Statepath
+                        }
+                        if (-not $using:SkipPolicy) {
+                            Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.Processing.Detail' -StringValues 'Policy Exemptions', $scopeObject.Scope
+                            $policyExemptions = Get-AzOpsPolicyExemption -ScopeObject $scopeObject
+                            $policyExemptions | ConvertTo-AzOpsState -StatePath $runspaceData.Statepath
+                        }
+                        if (-not $using:SkipLock) {
+                            Get-AzOpsResourceLock -ScopeObject $scopeObject -StatePath $runspaceData.Statepath
+                        }
+                        if (-not $using:SkipRole) {
+                            Get-AzOpsRole -ScopeObject $scopeObject -StatePath $runspaceData.Statepath
+                        }
+                    }
+                }
+            }
+        }
+        #endregion Process subscription scope in parallel
+
         #region Process Resource Groups
-        if ($SkipResourceGroup) {
-            Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.SkippingResourceGroup'
+        if ($SkipResourceGroup -or (-not $subscriptions)) {
+            if ($SkipResourceGroup) {
+                Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.SkippingResourceGroup'
+            }
+            else {
+                Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Subscription.NotFound'
+            }
         }
         else {
             if ((Get-PSFConfigValue -FullName 'AzOps.Core.SubscriptionsToIncludeResourceGroups') -ne '*') {
@@ -379,53 +434,6 @@
             }
         }
         #endregion Process Resource Groups
-
-        # Process Policies at subscription scope
-        if (-not $SkipPolicy) {
-            Get-AzOpsPolicy -ScopeObject $scopeObject -SubscriptionIds $subscriptionIds -StatePath $StatePath
-        }
-        # Process subscription scope in parallel
-        if ($subscriptions) {
-            $subscriptions | Foreach-Object -ThrottleLimit (Get-PSFConfigValue -FullName 'AzOps.Core.ThrottleLimit') -Parallel {
-                $subscription = $_
-                $runspaceData = $using:runspaceData
-
-                $msgCommon = @{
-                    FunctionName = $using:common.FunctionName
-                    ModuleName   = 'AzOps'
-                }
-
-                Import-Module "$([PSFramework.PSFCore.PSFCoreHost]::ModuleRoot)/PSFramework.psd1"
-                $azOps = Import-Module $runspaceData.AzOpsPath -Force -PassThru
-
-                & $azOps {
-                    $script:AzOpsAzManagementGroup = $runspaceData.runspace_AzOpsAzManagementGroup
-                    $script:AzOpsSubscriptions = $runspaceData.runspace_AzOpsSubscriptions
-                    $script:AzOpsPartialRoot = $runspaceData.runspace_AzOpsPartialRoot
-                    $script:AzOpsResourceProvider = $runspaceData.runspace_AzOpsResourceProvider
-                }
-                #region Process Privileged Identity Management resources, Policies, Locks and Roles at subscription scope
-                if ((-not $using:SkipPim) -or (-not $using:SkipPolicy) -or (-not $using:SkipLock) -or (-not $using:SkipRole)) {
-                    & $azOps {
-                        $scopeObject = New-AzOpsScope -Scope $subscription.id -StatePath $runspaceData.Statepath -ErrorAction Stop
-                        if (-not $using:SkipPim) {
-                            Get-AzOpsPim -ScopeObject $scopeObject -StatePath $runspaceData.Statepath
-                        }
-                        if (-not $using:SkipPolicy) {
-                            Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.Processing.Detail' -StringValues 'Policy Exemptions', $scopeObject.Scope
-                            $policyExemptions = Get-AzOpsPolicyExemption -ScopeObject $scopeObject
-                            $policyExemptions | ConvertTo-AzOpsState -StatePath $runspaceData.Statepath
-                        }
-                        if (-not $using:SkipLock) {
-                            Get-AzOpsResourceLock -ScopeObject $scopeObject -StatePath $runspaceData.Statepath
-                        }
-                        if (-not $using:SkipRole) {
-                            Get-AzOpsRole -ScopeObject $scopeObject -StatePath $runspaceData.Statepath
-                        }
-                    }
-                }
-            }
-        }
         Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Finished' -StringValues $scopeObject.Scope
     }
 }

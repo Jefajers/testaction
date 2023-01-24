@@ -102,13 +102,14 @@
     'Get-AzOpsResourceDefinition.ManagementGroup.Processing'                        = 'Processing Management Group [{0}] ({1})' # $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup
     'Get-AzOpsResourceDefinition.Processing.Detail'                                 = 'Processing detail: {0} for [{1}]' # 'Policy Definitions', $scopeObject.Scope
     'Get-AzOpsResourceDefinition.Processing.NotFound'                               = 'Scope [{0}] not found in Azure or is excluded' # $Scope
-    'Get-AzOpsResourceDefinition.NoResourceGroup'                                   = 'No non-managed resource Group found in [{0}])' # $scopeObject.Name
+    'Get-AzOpsResourceDefinition.NoResourceGroup'                                   = 'No non-managed Resource Group found in [{0}])' # $scopeObject.Name
     'Get-AzOpsResourceDefinition.Subscription.Processing'                           = 'Processing Subscription [{0}] ({1})' # $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription
+    'Get-AzOpsResourceDefinition.Subscription.NotFound'                             = 'No Subscription found to process Resource Groups in' #
     'Get-AzOpsResourceDefinition.Processing.Resource'                               = 'Processing resource [{0}] in resource Group [{1}]' # $resource.Name, $resourceGroup.ResourceGroupName
     'Get-AzOpsResourceDefinition.Processing.Resource.Discovery'                     = 'Searching for resources in [{0}]' # $scopeObject.Name
     'Get-AzOpsResourceDefinition.Processing.Resource.Discovery.NotFound'            = 'No resources found in [{0}]' # $scopeObject.Name
     'Get-AzOpsResourceDefinition.Processing.Resource.Warning'                       = 'Failed to get resources in {0}]. Consider excluding the resource causing the failure with [Core.SkipResourceType] setting' # $scopeObject.Name
-    'Get-AzOpsResourceDefinition.Processing.ResourceGroup'                          = 'Processing resource Group [{0}]' # $resourceGroup.ResourceGroupName
+    'Get-AzOpsResourceDefinition.Processing.ResourceGroup'                          = 'Processing Resource Group [{0}]' # $resourceGroup.ResourceGroupName
     'Get-AzOpsResourceDefinition.SkippingResourceGroup'                             = 'SkipResourceGroup switch used, skipping resource Group discovery' #
     'Get-AzOpsResourceDefinition.SkippingResources'                                 = 'Resources are skipped in due to SkipResource.' #
     'Get-AzOpsResourceDefinition.Processing.ChildResource'                          = 'Processing resource [{0}] in resource Group [{1}]' # $resource.Name, $resourceGroup.ResourceGroupName
