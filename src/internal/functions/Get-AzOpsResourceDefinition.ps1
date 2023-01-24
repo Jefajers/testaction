@@ -189,11 +189,11 @@
                 }
             }
         }
-        #region Process Policies at subscription scope
-        if (-not $SkipPolicy -and $subscriptions) {
+        #region Process Policies at $scopeObject
+        if (-not $SkipPolicy) {
             Get-AzOpsPolicy -ScopeObject $scopeObject -SubscriptionIds $subscriptionIds -StatePath $StatePath
         }
-        #endregion Process Policies at subscription scope
+        #endregion Process Policies at $scopeObject
 
         #region Process subscription scope in parallel
         if ($subscriptions) {
@@ -269,7 +269,7 @@
                     Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.ResourceGroup' -StringValues $resourceGroup.name -Target $resourceGroup
                     ConvertTo-AzOpsState -Resource $resourceGroup -ExportRawTemplate:$ExportRawTemplate -StatePath $Statepath
                 }
-                # Process resource groups in parallel
+                # Process Resource Groups in parallel
                 $resourceGroups | Foreach-Object -ThrottleLimit (Get-PSFConfigValue -FullName 'AzOps.Core.ThrottleLimit') -Parallel {
                     $resourceGroup = $_
                     $runspaceData = $using:runspaceData
@@ -312,7 +312,7 @@
             else {
                 Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.NoResourceGroup' -StringValues $scopeObject.Name
             }
-            # Process Policies at resource group scope
+            # Process Policies at Resource Group scope
             if (-not $SkipPolicy) {
                 if ($subscriptionsToIncludeResourceGroups) {
                     Get-AzOpsPolicy -ScopeObject $scopeObject -SubscriptionId $subscriptionIds -SubscriptionsToIncludeResourceGroups $subscriptionsToIncludeResourceGroups -ResourceGroups $resourceGroupsString -StatePath $StatePath
@@ -321,7 +321,7 @@
                     Get-AzOpsPolicy -ScopeObject $scopeObject -SubscriptionId $subscriptionIds -ResourceGroups $resourceGroupsString -StatePath $StatePath
                 }
             }
-            # Process Resources at resource group scope
+            # Process Resources at Resource Group scope
             if (-not $SkipResource) {
                 Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.Resource.Discovery' -StringValues $scopeObject.Name
                 try {
