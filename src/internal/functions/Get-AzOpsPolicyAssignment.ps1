@@ -35,10 +35,10 @@
             managementGroups {
                 Write-PSFMessage -Level Important -String 'Get-AzOpsPolicyAssignment.ManagementGroup' -StringValues $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup -Target $ScopeObject
                 if ($SubscriptionsToIncludeResourceGroups -and $ResourceGroups) {
-                    $query = "policyresources | where type == 'microsoft.authorization/policyassignments' and subscriptionId in ($SubscriptionsToIncludeResourceGroups) and resourceGroup in ($ResourceGroups) | order by ['id'] asc"
+                    $query = "policyresources | where type == 'microsoft.authorization/policyassignments' and subscriptionId in ($SubscriptionsToIncludeResourceGroups) and resourceGroup in~ ($ResourceGroups) | order by ['id'] asc"
                 }
                 elseif ($SubscriptionIds -and $ResourceGroups) {
-                    $query = "policyresources | where type == 'microsoft.authorization/policyassignments' and subscriptionId in ($SubscriptionIds) and resourceGroup in ($ResourceGroups) | order by ['id'] asc"
+                    $query = "policyresources | where type == 'microsoft.authorization/policyassignments' and subscriptionId in ($SubscriptionIds) and resourceGroup in~ ($ResourceGroups) | order by ['id'] asc"
                 }
                 else {
                     $query = "policyresources | where type == 'microsoft.authorization/policyassignments' and resourceGroup == '' | where subscriptionId == '' or subscriptionId in ($SubscriptionIds) | order by ['id'] asc"
@@ -52,7 +52,7 @@
             }
             resourcegroups {
                 Write-PSFMessage -Level Important -String 'Get-AzOpsPolicyAssignment.ResourceGroup' -StringValues $ScopeObject.ResourceGroup -Target $ScopeObject
-                $query = "policyresources | where type == 'microsoft.authorization/policyassignments' and resourceGroup == '$($ScopeObject.Name.Tolower())' and subscriptionId == '$($ScopeObject.Subscription)' | where id startswith '$($ScopeObject.Scope)' | order by ['id'] asc"
+                $query = "policyresources | where type == 'microsoft.authorization/policyassignments' and resourceGroup =~ '$($ScopeObject.Name)' and subscriptionId == '$($ScopeObject.Subscription)' | where id startswith '$($ScopeObject.Scope)' | order by ['id'] asc"
                 Search-AzOpsAzGraph -SubscriptionId $ScopeObject.Subscription -Query $query -ErrorAction Stop
             }
         }

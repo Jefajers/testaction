@@ -138,7 +138,7 @@
         switch ($scopeObject.Type) {
             subscriptions {
                 Write-PSFMessage -Level Important @common -String 'Get-AzOpsResourceDefinition.Subscription.Processing' -StringValues $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription
-                $query = "resourcecontainers | where type == 'microsoft.resources/subscriptions' and properties.subscriptionPolicies.quotaId !in ($ExcludedOffers) and properties.state !in ($ExcludedStates) | order by ['id'] asc"
+                $query = "resourcecontainers | where type == 'microsoft.resources/subscriptions' and properties.subscriptionPolicies.quotaId !in~ ($ExcludedOffers) and properties.state !in~ ($ExcludedStates) | order by ['id'] asc"
                 $subscriptions = Search-AzOpsAzGraph -SubscriptionId $scopeObject.Name -Query $query -ErrorAction Stop | Where-Object { $_.id -in $script:AzOpsSubscriptions.id }
                 $subscriptions.subscriptionId | ForEach-Object { $subscriptionIds += ($(if($subscriptionIds){","}) + "'" + $_  + "'") }
             }
@@ -146,7 +146,7 @@
                 Write-PSFMessage -Level Important @common -String 'Get-AzOpsResourceDefinition.ManagementGroup.Processing' -StringValues $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup
                 $query = "resourcecontainers | where type == 'microsoft.management/managementgroups' | order by ['id'] asc"
                 $managementgroups = Search-AzOpsAzGraph -ManagementGroupName $scopeObject.Name -Query $query -ErrorAction Stop | Where-Object { $_.id -in $script:AzOpsAzManagementGroup.Id }
-                $query = "resourcecontainers | where type == 'microsoft.resources/subscriptions' and properties.subscriptionPolicies.quotaId !in ($ExcludedOffers) and properties.state !in ($ExcludedStates) | order by ['id'] asc"
+                $query = "resourcecontainers | where type == 'microsoft.resources/subscriptions' and properties.subscriptionPolicies.quotaId !in~ ($ExcludedOffers) and properties.state !in~ ($ExcludedStates) | order by ['id'] asc"
                 $subscriptions = Search-AzOpsAzGraph -ManagementGroupName $scopeObject.Name -Query $query -ErrorAction Stop | Where-Object { $_.id -in $script:AzOpsSubscriptions.id }
                 $subscriptions.subscriptionId | ForEach-Object { $subscriptionIds += ($(if($subscriptionIds){","}) + "'" + $_  + "'") }
                 if ($managementgroups) {
@@ -328,10 +328,10 @@
                     $SkipResourceType | ForEach-Object { $skipResourceTypes += ($(if($skipResourceTypes){","}) + "'" + $_  + "'") }
                     $IncludeResourceType | ForEach-Object { $includeResourceTypes += ($(if($includeResourceTypes){","}) + "'" + $_  + "'") }
                     if ($IncludeResourceType -eq "*") {
-                        $query = "resources | where subscriptionId in ($subscriptionIds) and type !in ($skipResourceTypes) | order by ['id'] asc"
+                        $query = "resources | where subscriptionId in ($subscriptionIds) and type !in~ ($skipResourceTypes) | order by ['id'] asc"
                     }
                     else {
-                        $query = "resources | where subscriptionId in ($subscriptionIds) and type !in ($skipResourceTypes) and type in ($includeResourceTypes) | order by ['id'] asc"
+                        $query = "resources | where subscriptionId in ($subscriptionIds) and type !in~ ($skipResourceTypes) and type in~ ($includeResourceTypes) | order by ['id'] asc"
                     }
                     switch ($scopeObject.Type) {
                         subscriptions {
