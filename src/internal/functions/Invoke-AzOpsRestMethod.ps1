@@ -19,7 +19,7 @@
 
     process {
         # Process Path with given Method
-        Write-PSFMessage -Level Important -String 'Invoke-AzOpsRestMethod.Processing' -StringValues $Path
+        Write-PSFMessage -Level Verbose -String 'Invoke-AzOpsRestMethod.Processing' -StringValues $Path
         $allresults = do {
             $results = ((Invoke-AzRestMethod -Path $Path -Method $Method).Content | ConvertFrom-Json -Depth 100)
             $results.value

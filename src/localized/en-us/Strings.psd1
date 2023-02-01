@@ -160,6 +160,8 @@
     'Invoke-AzOpsPull.Validating.UserRole.Success'                                  = 'Azure access validated' #
     'Invoke-AzOpsPull.Validating.ResourceGroupDiscovery.Failed'                     = 'SkipResource set to false or SkipChildResource set to false requires SkipResourceGroup to be set to false. Change value for SkipResourceGroup and retry operation. {0} https://github.com/azure/azops/wiki/settings' #
 
+    'Invoke-AzOpsRestMethod.Processing'                                             = 'Invoke-AzRestMethod processing path: [{0}]' # $Path
+
     'Invoke-AzOpsPush.Change.AddModify'                                             = 'Adding or modifying:' #
     'Invoke-AzOpsPush.Change.AddModify.File'                                        = '  {0}' # $item
     'Invoke-AzOpsPush.Change.Delete'                                                = 'Deleting:' #
