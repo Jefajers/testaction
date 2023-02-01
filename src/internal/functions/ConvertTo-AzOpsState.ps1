@@ -42,7 +42,6 @@
     [OutputType([PSCustomObject])]
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [Alias('MG', 'Role', 'Assignment', 'CustomObject', 'ResourceGroup')]
         $Resource,
 
         [string]

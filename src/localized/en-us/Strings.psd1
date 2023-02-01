@@ -115,11 +115,11 @@
     'Get-AzOpsResourceDefinition.Processing.ChildResource'                          = 'Processing resource [{0}] in resource Group [{1}]' # $resource.Name, $resourceGroup.ResourceGroupName
     'Get-AzOpsResourceDefinition.SkippingChildResources'                            = 'Child resources are skipped, due to SkipChildResource' #
 
-    'Get-AzOpsRoleAssignment.Assignment'                                            = 'Found assignment {0} for role {1}' # $roleAssignment.DisplayName, $roleAssignment.RoleDefinitionName
+    'Get-AzOpsRoleAssignment.Assignment'                                            = 'Found assignment {0} for role {1}' # $roleAssignment.id, $roleAssignment.properties.roleDefinitionId
     'Get-AzOpsRoleAssignment.Processing'                                            = 'Retrieving Role Assignments at scope {0}' # $ScopeObject
 
-    'Get-AzOpsRoleDefinition.NonAuthorative'                                        = 'Role Definition {0} exists at {1} however it is not authoritative. Current authoritative scope is {2}' # $roledefinition.Id, Id, $ScopeObject.Scope, $roledefinition.AssignableScopes[0]
-    'Get-AzOpsRoleDefinition.Processing'                                            = 'Processing {0}' # $ScopeObject
+    'Get-AzOpsRoleDefinition.Processing'                                            = 'Processing scope {0}' # $ScopeObject
+    'Get-AzOpsRoleDefinition.Definition'                                            = 'Processing object {0}' # $roleDefinition.id
 
     'Get-AzOpsRoleEligibilityScheduleRequest.Processing'                            = 'Retrieving Privileged Identity Management RoleEligibilitySchedule at [{0}]' # $ScopeObject.Scope
     'Get-AzOpsRoleEligibilityScheduleRequest.Assignment'                            = 'Found Privileged Identity Management RoleEligibilityScheduleRequest assignment [{0}]' # $roleEligibilitySchedule.Name
