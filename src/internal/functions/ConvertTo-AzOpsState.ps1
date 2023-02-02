@@ -15,8 +15,6 @@
             Used if to return object in pipeline instead of exporting file
         .PARAMETER ChildResource
             The ChildResource contains details of the child resource
-        .PARAMETER ExportRawTemplate
-            Used in cases you want to return the template without the custom parameters json schema
         .PARAMETER StatePath
             The root path to where the entire state is being built in.
         .EXAMPLE
@@ -52,9 +50,6 @@
 
         [hashtable]
         $ChildResource,
-
-        [switch]
-        $ExportRawTemplate,
 
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string]

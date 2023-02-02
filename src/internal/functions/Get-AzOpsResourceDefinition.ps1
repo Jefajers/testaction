@@ -25,12 +25,8 @@
             Skip discovery of resource groups.
         .PARAMETER SkipResourceType
             Skip discovery of specific resource types.
-        .PARAMETER SkipUnsupportedChildResourceType
-            Skip discovery of unsupported child resource types.
         .PARAMETER SkipRole
             Skip discovery of roles for better performance.
-        .PARAMETER ExportRawTemplate
-            Export generic templates without embedding them in the parameter block.
         .PARAMETER StatePath
             The root folder under which to write the resource json.
         .EXAMPLE
@@ -83,14 +79,8 @@
         [string[]]
         $SkipResourceType = (Get-PSFConfigValue -FullName 'AzOps.Core.SkipResourceType'),
 
-        [string[]]
-        $SkipUnsupportedChildResourceType = (Get-PSFConfigValue -FullName 'AzOps.Core.SkipUnsupportedChildResourceType'),
-
         [switch]
         $SkipRole = (Get-PSFConfigValue -FullName 'AzOps.Core.SkipRole'),
-
-        [switch]
-        $ExportRawTemplate = (Get-PSFConfigValue -FullName 'AzOps.Core.ExportRawTemplate'),
 
         [Parameter(Mandatory = $false)]
         [string]
@@ -267,7 +257,7 @@
             if ($resourceGroups) {
                 foreach ($resourceGroup in $resourceGroups) {
                     Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.ResourceGroup' -StringValues $resourceGroup.name -Target $resourceGroup
-                    ConvertTo-AzOpsState -Resource $resourceGroup -ExportRawTemplate:$ExportRawTemplate -StatePath $Statepath
+                    ConvertTo-AzOpsState -Resource $resourceGroup -StatePath $Statepath
                 }
                 # Process Resource Groups in parallel
                 $resourceGroups | Foreach-Object -ThrottleLimit (Get-PSFConfigValue -FullName 'AzOps.Core.ThrottleLimit') -Parallel {
@@ -326,13 +316,16 @@
                 Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.Resource.Discovery' -StringValues $scopeObject.Name
                 try {
                     $SkipResourceType | ForEach-Object { $skipResourceTypes += ($(if($skipResourceTypes){","}) + "'" + $_  + "'") }
-                    $IncludeResourceType | ForEach-Object { $includeResourceTypes += ($(if($includeResourceTypes){","}) + "'" + $_  + "'") }
-                    if ($IncludeResourceType -eq "*") {
-                        $query = "resources | where subscriptionId in ($subscriptionIds) and type !in~ ($skipResourceTypes) | order by ['id'] asc"
+                    $query = "resources | where subscriptionId in ($subscriptionIds) and type !in~ ($skipResourceTypes)"
+                    if ($IncludeResourceType -ne "*") {
+                        $IncludeResourceType | ForEach-Object { $includeResourceTypes += ($(if($includeResourceTypes){","}) + "'" + $_  + "'") }
+                        $query = $query + " and type in~ ($includeResourceTypes)"
                     }
-                    else {
-                        $query = "resources | where subscriptionId in ($subscriptionIds) and type !in~ ($skipResourceTypes) and type in~ ($includeResourceTypes) | order by ['id'] asc"
+                    if ($IncludeResourcesInResourceGroup -ne "*") {
+                        $IncludeResourcesInResourceGroup | ForEach-Object { $includeResourcesInResourceGroups += ($(if($includeResourcesInResourceGroups){","}) + "'" + $_  + "'") }
+                        $query = $query + " and resourceGroup in~ ($includeResourcesInResourceGroups)"
                     }
+                    $query = $query + " | order by ['id'] asc"
                     switch ($scopeObject.Type) {
                         subscriptions {
                             $resourcesBase = Search-AzOpsAzGraph -SubscriptionId $scopeObject.Name -Query $query -ErrorAction Stop
@@ -348,10 +341,10 @@
                 if ($resourcesBase) {
                     $resources = @()
                     foreach ($resource in $resourcesBase) {
-                        if ($resourceGroups | Where-Object { $_.name -eq $resource.resourceGroup -and $_.subscriptionId -eq $resource.subscriptionId } ) {
+                        if ($resourceGroups | Where-Object { $_.name -eq $resource.resourceGroup -and $_.subscriptionId -eq $resource.subscriptionId }) {
                             Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.Resource' -StringValues $resource.name, $resource.resourcegroup -Target $resource
                             $resources += $resource
-                            ConvertTo-AzOpsState -Resource $resource -ExportRawTemplate:$ExportRawTemplate -StatePath $Statepath
+                            ConvertTo-AzOpsState -Resource $resource -StatePath $Statepath
                         }
                     }
                 }

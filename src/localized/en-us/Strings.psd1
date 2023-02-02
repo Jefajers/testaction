@@ -246,21 +246,21 @@
     'Remove-AzOpsDeployment.ResourceNotFound'                                       = 'Unable to find resource of type {0} with id {1}.'# $scopeObject.resource, $scopeObject.scope, $resultsError
     'Remove-AzOpsDeployment.SkipUnsupportedResource'                                = 'Deletion is currently only supported for policyAssignments, policyDefinitions, policyExemptions, policySetDefinitions and roleAssignments. Will NOT proceed with deletion of file {0}'# $templateFilePath
 
-    'Remove-AzOpsInvalidCharacters.Completed'                                       = 'Valid string: {0}'# $String
-    'Remove-AzOpsInvalidCharacters.Invalid'                                         = 'Invalid character detected in string: {0}, further processing initiated'# $String
-    'Remove-AzOpsInvalidCharacters.Removal'                                         = 'Removed invalid character: {0} from string: {1}'# $character, $String
+    'Remove-AzOpsInvalidCharacter.Completed'                                       = 'Valid string: {0}'# $String
+    'Remove-AzOpsInvalidCharacter.Invalid'                                         = 'Invalid character detected in string: {0}, further processing initiated'# $String
+    'Remove-AzOpsInvalidCharacter.Removal'                                         = 'Removed invalid character: {0} from string: {1}'# $character, $String
 
-    'Save-AzOpsManagementGroupChildren.Creating.Scope'                              = 'Creating scope object' #
-    'Save-AzOpsManagementGroupChildren.Data.Directory'                              = 'Resolved state path directory: {0}' # $statepathDirectory
-    'Save-AzOpsManagementGroupChildren.Data.FileName'                               = 'Resolved state path filename: {0}' # $statepathFileName
-    'Save-AzOpsManagementGroupChildren.Data.ScopeDirectory'                         = 'Resolved state path scope directory: {0}' # $statepathScopeDirectory
-    'Save-AzOpsManagementGroupChildren.Data.ScopeDirectoryParent'                   = 'Resolved state path scope directory parent: {0}' # $statepathScopeDirectoryParent
-    'Save-AzOpsManagementGroupChildren.Data.StatePath'                              = 'Resolved state path: {0}' # $scopeStatepath
-    'Save-AzOpsManagementGroupChildren.Moving.Destination'                          = 'Moved existing state file to: {0}' # $statepathScopeDirectoryParent
-    'Save-AzOpsManagementGroupChildren.Moving.Source'                               = 'Found existing state file in directory: {0}' # $exisitingScopePath
-    'Save-AzOpsManagementGroupChildren.Processing'                                  = 'Processing Scope: {0}' # $scopeObject.Scope
-    'Save-AzOpsManagementGroupChildren.Starting'                                    = 'Starting execution' #
-    'Save-AzOpsManagementGroupChildren.Subscription.NotFound'                       = 'Unable to locate subscription: {0} within AzOpsSubscriptions object' #child.Name
+    'Save-AzOpsManagementGroupChild.Creating.Scope'                              = 'Creating scope object' #
+    'Save-AzOpsManagementGroupChild.Data.Directory'                              = 'Resolved state path directory: {0}' # $statepathDirectory
+    'Save-AzOpsManagementGroupChild.Data.FileName'                               = 'Resolved state path filename: {0}' # $statepathFileName
+    'Save-AzOpsManagementGroupChild.Data.ScopeDirectory'                         = 'Resolved state path scope directory: {0}' # $statepathScopeDirectory
+    'Save-AzOpsManagementGroupChild.Data.ScopeDirectoryParent'                   = 'Resolved state path scope directory parent: {0}' # $statepathScopeDirectoryParent
+    'Save-AzOpsManagementGroupChild.Data.StatePath'                              = 'Resolved state path: {0}' # $scopeStatepath
+    'Save-AzOpsManagementGroupChild.Moving.Destination'                          = 'Moved existing state file to: {0}' # $statepathScopeDirectoryParent
+    'Save-AzOpsManagementGroupChild.Moving.Source'                               = 'Found existing state file in directory: {0}' # $exisitingScopePath
+    'Save-AzOpsManagementGroupChild.Processing'                                  = 'Processing Scope: {0}' # $scopeObject.Scope
+    'Save-AzOpsManagementGroupChild.Starting'                                    = 'Starting execution' #
+    'Save-AzOpsManagementGroupChild.Subscription.NotFound'                       = 'Unable to locate subscription: {0} within AzOpsSubscriptions object' #child.Name
 
     'Search-AzOpsAzGraph.Processing'                                                = 'AzGraph processing query: [{0}]' # $Query
     'Search-AzOpsAzGraph.Processing.Done'                                           = 'AzGraph completed processing of query: [{0}]' # $Query
