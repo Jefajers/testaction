@@ -75,6 +75,7 @@ $deploymentLocationId = (Get-FileHash -Algorithm SHA256 -InputStream ([IO.Memory
 
 Write-PSFMessage -Level Verbose -Message "Generating folder structure" -FunctionName "BeforeAll"
 try {
+    Initialize-AzOpsEnvironment
     Invoke-AzOpsPull -SkipRole:$false -SkipPolicy:$false -SkipResource:$false -SkipResourceGroup:$false
 }
 catch {

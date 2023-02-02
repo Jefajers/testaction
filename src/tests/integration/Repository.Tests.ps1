@@ -147,6 +147,7 @@ Describe "Repository" {
         Set-PSFConfig -FullName AzOps.Core.State -Value $partialMgDiscoveryRootgeneratedRoot
         Write-PSFMessage -Level Verbose -Message "Generating folder structure for PartialMgDiscoveryRoot" -FunctionName "BeforeAll"
         try {
+            Initialize-AzOpsEnvironment
             Invoke-AzOpsPull -SkipLock:$true -SkipPim:$true -SkipResourceGroup:$true -SkipPolicy:$true -SkipRole:$true -SkipChildResource:$true -SkipResource:$true
         }
         catch {
@@ -166,6 +167,7 @@ Describe "Repository" {
 
         Write-PSFMessage -Level Verbose -Message "Generating folder structure" -FunctionName "BeforeAll"
         try {
+            Initialize-AzOpsEnvironment
             Invoke-AzOpsPull -SkipLock:$false -SkipRole:$false -SkipPolicy:$false -SkipResource:$false
         }
         catch {
@@ -600,6 +602,10 @@ Describe "Repository" {
         It "Policy Assignments scope property should match" {
             $fileContents = Get-Content -Path $script:policyAssignmentsFile -Raw | ConvertFrom-Json -Depth 25
             $fileContents.resources[0].properties.scope | Should -Be "$($script:managementManagementGroup.Id)"
+        }
+        It "Policy Assignments custom metadata property should exist" {
+            $fileContents = Get-Content -Path $script:policyAssignmentsFile -Raw | ConvertFrom-Json -Depth 25
+            $fileContents.resources[0].properties.metadata.customkey | Should -BeTrue
         }
         It "Policy Assignments deployment should be successful" {
             $script:policyAssignmentDeployment = Get-AzManagementGroupDeployment -ManagementGroupId $script:managementManagementGroup.Name -Name $script:policyAssignmentsDeploymentName

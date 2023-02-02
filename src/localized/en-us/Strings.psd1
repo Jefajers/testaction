@@ -147,7 +147,6 @@
     'Invoke-AzOpsPull.Deleting.State'                                               = 'Removing state in {0}' # $StatePath
     'Invoke-AzOpsPull.Duration'                                                     = 'AzOps repository setup completed in {0}' # $stopWatch.Elapsed
     'Invoke-AzOpsPull.Initialization.Completed'                                     = 'Completed preparations for the AzOps repository setup' #
-    'Invoke-AzOpsPull.Initialization.Starting'                                      = 'Starting preparations for the AzOps repository setup' #
     'Invoke-AzOpsPull.Migration.Required'                                           = 'Migration from previous repository state IS required' #
     'Invoke-AzOpsPull.Rebuilding.State'                                             = 'Rebuilding state in {0}' # $StatePath
     'Invoke-AzOpsPull.Tenant'                                                       = 'Connected to tenant {0}' # $tenantId
