@@ -122,7 +122,7 @@
         #region Management Group Resolution
         Write-PSFMessage -Level Important -String 'Initialize-AzOpsEnvironment.ManagementGroup.Resolution' -StringValues $managementGroups.Count
         $tempResolved = foreach ($mgmtGroup in $managementGroups) {
-            Write-PSFMessage -Level Important -String 'Initialize-AzOpsEnvironment.ManagementGroup.Expanding' -StringValues $mgmtGroup.Name
+            Write-PSFMessage -Level Verbose -String 'Initialize-AzOpsEnvironment.ManagementGroup.Expanding' -StringValues $mgmtGroup.Name
             Get-AzOpsManagementGroups -ManagementGroup $mgmtGroup.Name -PartialDiscovery:$PartialMgDiscovery
         }
         $script:AzOpsAzManagementGroup = $tempResolved | Sort-Object -Property Id -Unique

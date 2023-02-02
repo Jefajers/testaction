@@ -21,14 +21,14 @@
     )
 
     process {
-        Write-PSFMessage -Level Important -String 'Get-AzOpsRoleDefinition.Processing' -StringValues $ScopeObject -Target $ScopeObject
+        Write-PSFMessage -Level Debug -String 'Get-AzOpsRoleDefinition.Processing' -StringValues $ScopeObject -Target $ScopeObject
         $apiVersion = (($script:AzOpsResourceProvider | Where-Object {$_.ProviderNamespace -eq 'Microsoft.Authorization'}).ResourceTypes | Where-Object {$_.ResourceTypeName -eq 'roleDefinitions'}).ApiVersions | Select-Object -First 1
         $path = "$($scopeObject.Scope)/providers/Microsoft.Authorization/roleDefinitions?api-version=$apiVersion&`$filter=type+eq+'CustomRole'"
         $roleDefinitions = Invoke-AzOpsRestMethod -Path $path -Method GET
         if ($roleDefinitions) {
             foreach ($roleDefinition in $roleDefinitions) {
                 if ($roleDefinition.properties.assignableScopes -eq $ScopeObject.Scope) {
-                    Write-PSFMessage -Level Verbose -String 'Get-AzOpsRoleDefinition.Definition' -StringValues $roleDefinition.id -Target $ScopeObject
+                    Write-PSFMessage -Level Debug -String 'Get-AzOpsRoleDefinition.Definition' -StringValues $roleDefinition.id -Target $ScopeObject
                     [AzOpsRoleDefinition]::new($roleDefinition)
                 }
             }

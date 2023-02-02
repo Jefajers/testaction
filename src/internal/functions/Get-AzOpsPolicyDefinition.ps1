@@ -29,12 +29,12 @@
 
         switch ($ScopeObject.Type) {
             managementGroups {
-                Write-PSFMessage -Level Important -String 'Get-AzOpsPolicyDefinition.ManagementGroup' -StringValues $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup -Target $ScopeObject
+                Write-PSFMessage -Level Debug -String 'Get-AzOpsPolicyDefinition.ManagementGroup' -StringValues $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup -Target $ScopeObject
                 $query = "policyresources | where type == 'microsoft.authorization/policydefinitions' and properties.policyType == 'Custom' and resourceGroup == '' | where subscriptionId == '' or subscriptionId in ($SubscriptionIds)  | order by ['id'] asc"
                 Search-AzOpsAzGraph -ManagementGroupName $ScopeObject.Name -Query $query -ErrorAction Stop
             }
             subscriptions {
-                Write-PSFMessage -Level Important -String 'Get-AzOpsPolicyDefinition.Subscription' -StringValues $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription -Target $ScopeObject
+                Write-PSFMessage -Level Debug -String 'Get-AzOpsPolicyDefinition.Subscription' -StringValues $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription -Target $ScopeObject
                 $query = "policyresources | where type == 'microsoft.authorization/policydefinitions' and subscriptionId == '$($ScopeObject.Name)' and properties.policyType == 'Custom' | where id startswith '$($ScopeObject.Scope)' | order by ['id'] asc"
                 Search-AzOpsAzGraph -SubscriptionId $ScopeObject.Name -Query $query -ErrorAction Stop
             }
