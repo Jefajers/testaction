@@ -110,7 +110,7 @@
     }
 
     process {
-        Write-PSFMessage -Level Verbose -String 'Get-AzOpsResourceDefinition.Processing' -StringValues $Scope
+        Write-PSFMessage -Level Important -String 'Get-AzOpsResourceDefinition.Processing' -StringValues $Scope
         try {
             $scopeObject = New-AzOpsScope -Scope $Scope -StatePath $StatePath -ErrorAction Stop
         }
@@ -122,23 +122,16 @@
             Write-PSFMessage -Level Verbose -String 'Get-AzOpsResourceDefinition.Finished' -StringValues $scopeObject.Scope
             return
         }
-        # Construct object with subscription attributes to exclude in graph query
-        (Get-PSFConfigValue -FullName 'AzOps.Core.ExcludedSubOffer') | ForEach-Object { $ExcludedOffers += ($(if($ExcludedOffers){","}) + "'" + $_  + "'") }
-        (Get-PSFConfigValue -FullName 'AzOps.Core.ExcludedSubState') | ForEach-Object { $ExcludedStates += ($(if($ExcludedStates){","}) + "'" + $_  + "'") }
         switch ($scopeObject.Type) {
             subscriptions {
                 Write-PSFMessage -Level Important @common -String 'Get-AzOpsResourceDefinition.Subscription.Processing' -StringValues $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription
-                $query = "resourcecontainers | where type == 'microsoft.resources/subscriptions' and properties.subscriptionPolicies.quotaId !in~ ($ExcludedOffers) and properties.state !in~ ($ExcludedStates) | order by ['id'] asc"
-                $subscriptions = Search-AzOpsAzGraph -SubscriptionId $scopeObject.Name -Query $query -ErrorAction Stop | Where-Object { $_.id -in $script:AzOpsSubscriptions.id }
-                $subscriptions.subscriptionId | ForEach-Object { $subscriptionIds += ($(if($subscriptionIds){","}) + "'" + $_  + "'") }
+                $subscriptions = Get-AzSubscription -SubscriptionId $scopeObject.Name | Where-Object { $_.Id -in $script:AzOpsSubscriptions.id }
             }
             managementGroups {
                 Write-PSFMessage -Level Important @common -String 'Get-AzOpsResourceDefinition.ManagementGroup.Processing' -StringValues $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup
                 $query = "resourcecontainers | where type == 'microsoft.management/managementgroups' | order by ['id'] asc"
                 $managementgroups = Search-AzOpsAzGraph -ManagementGroupName $scopeObject.Name -Query $query -ErrorAction Stop | Where-Object { $_.id -in $script:AzOpsAzManagementGroup.Id }
-                $query = "resourcecontainers | where type == 'microsoft.resources/subscriptions' and properties.subscriptionPolicies.quotaId !in~ ($ExcludedOffers) and properties.state !in~ ($ExcludedStates) | order by ['id'] asc"
-                $subscriptions = Search-AzOpsAzGraph -ManagementGroupName $scopeObject.Name -Query $query -ErrorAction Stop | Where-Object { $_.id -in $script:AzOpsSubscriptions.id }
-                $subscriptions.subscriptionId | ForEach-Object { $subscriptionIds += ($(if($subscriptionIds){","}) + "'" + $_  + "'") }
+                $subscriptions = Get-AzOpsNestedSubscription -Scope $scopeObject.Name
                 if ($managementgroups) {
                     # Process managementGroup scope in parallel
                     $managementgroups | Foreach-Object -ThrottleLimit (Get-PSFConfigValue -FullName 'AzOps.Core.ThrottleLimit') -Parallel {
@@ -181,7 +174,7 @@
         }
         #region Process Policies at $scopeObject
         if (-not $SkipPolicy) {
-            Get-AzOpsPolicy -ScopeObject $scopeObject -SubscriptionIds $subscriptionIds -StatePath $StatePath
+            Get-AzOpsPolicy -ScopeObject $scopeObject -Subscription $subscriptions -StatePath $StatePath
         }
         #endregion Process Policies at $scopeObject
 
@@ -208,7 +201,7 @@
                 # Process Privileged Identity Management resources, Policies, Locks and Roles at subscription scope
                 if ((-not $using:SkipPim) -or (-not $using:SkipPolicy) -or (-not $using:SkipLock) -or (-not $using:SkipRole)) {
                     & $azOps {
-                        $scopeObject = New-AzOpsScope -Scope $subscription.id -StatePath $runspaceData.Statepath -ErrorAction Stop
+                        $scopeObject = New-AzOpsScope -Scope ($subscription.Type + '/' + $subscription.Id) -StatePath $runspaceData.Statepath -ErrorAction Stop
                         if (-not $using:SkipPim) {
                             Get-AzOpsPim -ScopeObject $scopeObject -StatePath $runspaceData.Statepath
                         }
@@ -240,20 +233,15 @@
         }
         else {
             if ((Get-PSFConfigValue -FullName 'AzOps.Core.SubscriptionsToIncludeResourceGroups') -ne '*') {
-                (Get-PSFConfigValue -FullName 'AzOps.Core.SubscriptionsToIncludeResourceGroups') | ForEach-Object { $subscriptionsToIncludeResourceGroups += ($(if($subscriptionsToIncludeResourceGroups){","}) + "'" + $_  + "'") }
-                $query = "resourcecontainers | where type == 'microsoft.resources/subscriptions/resourcegroups' and subscriptionId in ($subscriptionIds) and subscriptionId in ($subscriptionsToIncludeResourceGroups) | where managedBy == '' | order by ['id'] asc"
-            } else {
-                $query = "resourcecontainers | where type == 'microsoft.resources/subscriptions/resourcegroups' and subscriptionId in ($subscriptionIds) | where managedBy == '' | order by ['id'] asc"
+                $subscriptionsToIncludeResourceGroups = $subscriptions | Where-Object { $_.Id -in (Get-PSFConfigValue -FullName 'AzOps.Core.SubscriptionsToIncludeResourceGroups') }
             }
-            switch ($scopeObject.Type) {
-                subscriptions {
-                    $resourceGroups = Search-AzOpsAzGraph -SubscriptionId $scopeObject.Name -Query $query -ErrorAction Stop
-                }
-                managementGroups {
-                    $resourceGroups = Search-AzOpsAzGraph -ManagementGroupName $scopeObject.Name -Query $query -ErrorAction Stop
-                }
+            $query = "resourcecontainers | where type == 'microsoft.resources/subscriptions/resourcegroups' | where managedBy == '' | order by ['id'] asc"
+            if ($subscriptionsToIncludeResourceGroups) {
+                $resourceGroups = Search-AzOpsAzGraph -Subscription $subscriptionsToIncludeResourceGroups -Query $query -ErrorAction Stop
             }
-            $resourceGroups.resourceGroup | ForEach-Object { $resourceGroupsString += ($(if($resourceGroupsString){","}) + "'" + $_  + "'") }
+            else {
+                $resourceGroups = Search-AzOpsAzGraph -Subscription $subscriptions -Query $query -ErrorAction Stop
+            }
             if ($resourceGroups) {
                 foreach ($resourceGroup in $resourceGroups) {
                     Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.ResourceGroup' -StringValues $resourceGroup.name -Target $resourceGroup
@@ -305,10 +293,10 @@
             # Process Policies at Resource Group scope
             if (-not $SkipPolicy) {
                 if ($subscriptionsToIncludeResourceGroups) {
-                    Get-AzOpsPolicy -ScopeObject $scopeObject -SubscriptionId $subscriptionIds -SubscriptionsToIncludeResourceGroups $subscriptionsToIncludeResourceGroups -ResourceGroups $resourceGroupsString -StatePath $StatePath
+                    Get-AzOpsPolicy -ScopeObject $scopeObject -Subscription $subscriptions -SubscriptionsToIncludeResourceGroups $subscriptionsToIncludeResourceGroups -ResourceGroup -StatePath $StatePath
                 }
                 else {
-                    Get-AzOpsPolicy -ScopeObject $scopeObject -SubscriptionId $subscriptionIds -ResourceGroups $resourceGroupsString -StatePath $StatePath
+                    Get-AzOpsPolicy -ScopeObject $scopeObject -Subscription $subscriptions -ResourceGroup -StatePath $StatePath
                 }
             }
             # Process Resources at Resource Group scope
@@ -316,7 +304,7 @@
                 Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.Resource.Discovery' -StringValues $scopeObject.Name
                 try {
                     $SkipResourceType | ForEach-Object { $skipResourceTypes += ($(if($skipResourceTypes){","}) + "'" + $_  + "'") }
-                    $query = "resources | where subscriptionId in ($subscriptionIds) and type !in~ ($skipResourceTypes)"
+                    $query = "resources | where type !in~ ($skipResourceTypes)"
                     if ($IncludeResourceType -ne "*") {
                         $IncludeResourceType | ForEach-Object { $includeResourceTypes += ($(if($includeResourceTypes){","}) + "'" + $_  + "'") }
                         $query = $query + " and type in~ ($includeResourceTypes)"
@@ -326,14 +314,7 @@
                         $query = $query + " and resourceGroup in~ ($includeResourcesInResourceGroups)"
                     }
                     $query = $query + " | order by ['id'] asc"
-                    switch ($scopeObject.Type) {
-                        subscriptions {
-                            $resourcesBase = Search-AzOpsAzGraph -SubscriptionId $scopeObject.Name -Query $query -ErrorAction Stop
-                        }
-                        managementGroups {
-                            $resourcesBase = Search-AzOpsAzGraph -ManagementGroupName $scopeObject.Name -Query $query -ErrorAction Stop
-                        }
-                    }
+                    $resourcesBase = Search-AzOpsAzGraph -Subscription $subscriptions -Query $query -ErrorAction Stop
                 }
                 catch {
                     Write-PSFMessage -Level Warning @common -String 'Get-AzOpsResourceDefinition.Processing.Resource.Warning' -StringValues $scopeObject.Name

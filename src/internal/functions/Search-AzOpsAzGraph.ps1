@@ -1,12 +1,13 @@
 ﻿function Search-AzOpsAzGraph {
+
     <#
         .SYNOPSIS
-            Search Graph based on input query combined with scope ManagementGroupName or SubscriptionId.
+            Search Graph based on input query combined with scope ManagementGroupName or Subscription Id.
             Manages paging of results, ensuring completeness of results.
         .PARAMETER ManagementGroupName
             ManagementGroup Name
-        .PARAMETER SubscriptionId
-            Subscription Id
+        .PARAMETER Subscription
+            Subscription Id's
         .PARAMETER Query
             AzureResourceGraph-Query
         .EXAMPLE
@@ -20,27 +21,37 @@
         [string]
         $ManagementGroupName,
         [Parameter(Mandatory = $false)]
-        [string]
-        $SubscriptionId,
+        [object]
+        $Subscription,
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [Object]
+        [object]
         $Query
     )
 
     process {
         Write-PSFMessage -Level Verbose -String 'Search-AzOpsAzGraph.Processing' -StringValues $Query
         $results = @()
-        do {
-            if ($ManagementGroupName) {
-                $processing = Search-AzGraph -ManagementGroup $ManagementGroupName -Query $Query -SkipToken $processing.SkipToken -ErrorAction Stop
+        if ($ManagementGroupName) {
+            do {
+                $processing = Search-AzGraph -ManagementGroup $ManagementGroupName -Query $Query -AllowPartialScope -SkipToken $processing.SkipToken -ErrorAction Stop
+                $results += $processing
             }
-            elseif ($SubscriptionId) {
-                $processing = Search-AzGraph -Subscription $SubscriptionId -Query $Query -SkipToken $processing.SkipToken -ErrorAction Stop
-            }
-            $results += $processing
+            while ($processing.SkipToken)
         }
-        while ($processing.SkipToken)
-
+        if ($Subscription) {
+            # Create a counter, set the batch size, and prepare a variable for the results
+            $counter = [PSCustomObject] @{ Value = 0 }
+            $batchSize = 1000
+            # Group subscriptions into batches to conform with graph limits
+            $subscriptionBatch = $Subscription | Group-Object -Property { [math]::Floor($counter.Value++ / $batchSize) }
+            foreach ($group in $subscriptionBatch) {
+                do {
+                    $processing = Search-AzGraph -Subscription ($group.Group).Id -Query $Query -SkipToken $processing.SkipToken -ErrorAction Stop
+                    $results += $processing
+                }
+                while ($processing.SkipToken)
+            }
+        }
         if ($results) {
             Write-PSFMessage -Level Verbose -String 'Search-AzOpsAzGraph.Processing.Done' -StringValues $Query
             return $results
@@ -49,4 +60,5 @@
             Write-PSFMessage -Level Verbose -String 'Search-AzOpsAzGraph.Processing.NoResult' -StringValues $Query
         }
     }
+
 }

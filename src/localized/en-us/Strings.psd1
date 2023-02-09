@@ -81,11 +81,11 @@
     'Get-AzOpsCurrentPrincipal.PrincipalId'                                         = 'Current PrincipalId is {0}' #$principalObject.id
 
     'Get-AzOpsPolicyAssignment.ManagementGroup'                                     = 'Retrieving Policy Assignment for Management Group {0} ({1})' # $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup
-    'Get-AzOpsPolicyAssignment.ResourceGroup'                                       = 'Retrieving Policy Assignment for Resource Group {0}' # $ScopeObject.ResourceGroup
-    'Get-AzOpsPolicyAssignment.Subscription'                                        = 'Retrieving Policy Assignment for Subscription {0} ({1})' # $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription
+    'Get-AzOpsPolicyAssignment.ResourceGroup'                                       = 'Retrieving Policy Assignment for Resource Group in {0} Subscription objects' # $Subscription.count
+    'Get-AzOpsPolicyAssignment.Subscription'                                        = 'Retrieving Policy Assignment for {0} Subscription objects' # $Subscription.count
 
     'Get-AzOpsPolicyDefinition.ManagementGroup'                                     = 'Retrieving custom policy definitions for Management Group [{0}] ({1})' # $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup
-    'Get-AzOpsPolicyDefinition.Subscription'                                        = 'Retrieving custom policy definitions for Subscription [{0}] ({1})' # $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription
+    'Get-AzOpsPolicyDefinition.Subscription'                                        = 'Retrieving custom policy definitions for {0} Subscription objects' # $Subscription.count
 
     'Get-AzOpsPolicyExemption.ManagementGroup'                                      = 'Retrieving Policy Exemption for Management Group {0} ({1})' # $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup
     'Get-AzOpsPolicyExemption.ResourceGroup'                                        = 'Retrieving Policy Exemption for Resource Group {0}' # $ScopeObject.ResourceGroup
@@ -95,11 +95,12 @@
     'Get-AzOpsResourceLock.Subscription'                                            = 'Retrieving Resource Locks for Subscription {0} ({1})' # $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription
 
     'Get-AzOpsPolicySetDefinition.ManagementGroup'                                  = 'Retrieving PolicySet Definition for ManagementGroup {0} ({1})' # $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup
-    'Get-AzOpsPolicySetDefinition.Subscription'                                     = 'Retrieving PolicySet Definition for Subscription {0} ({1})' # $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription
+    'Get-AzOpsPolicySetDefinition.Subscription'                                     = 'Retrieving PolicySet Definition for {0} Subscription objects' # $Subscription.count
 
     'Get-AzOpsResourceDefinition.ChildResource.Warning'                             = 'Failed to export childResources in [{0}]. Warning: [{1}]' # $resourceGroup.ResourceGroupName, $_
     'Get-AzOpsResourceDefinition.Finished'                                          = 'Finished processing scope [{0}]' # $scopeObject.Scope
     'Get-AzOpsResourceDefinition.ManagementGroup.Processing'                        = 'Processing Management Group [{0}] ({1})' # $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup
+    'Get-AzOpsResourceDefinition.Processing'                                        = 'Processing resources at [{0}]' # $Scope
     'Get-AzOpsResourceDefinition.Processing.Detail'                                 = 'Processing detail: {0} for [{1}]' # 'Policy Definitions', $scopeObject.Scope
     'Get-AzOpsResourceDefinition.Processing.NotFound'                               = 'Scope [{0}] not found in Azure or is excluded' # $Scope
     'Get-AzOpsResourceDefinition.NoResourceGroup'                                   = 'No non-managed Resource Group found in [{0}])' # $scopeObject.Name
@@ -148,6 +149,7 @@
     'Invoke-AzOpsPull.Duration'                                                     = 'AzOps repository setup completed in {0}' # $stopWatch.Elapsed
     'Invoke-AzOpsPull.Initialization.Completed'                                     = 'Completed preparations for the AzOps repository setup' #
     'Invoke-AzOpsPull.Migration.Required'                                           = 'Migration from previous repository state IS required' #
+    'Invoke-AzOpsPull.Building.State'                                               = 'Building AzOpsState structure recursively at {0}' # $StatePath
     'Invoke-AzOpsPull.Rebuilding.State'                                             = 'Rebuilding state in {0}' # $StatePath
     'Invoke-AzOpsPull.Tenant'                                                       = 'Connected to tenant {0}' # $tenantId
     'Invoke-AzOpsPull.TemplateParameterFileSuffix'                                  = 'Template parameter file suffix {0}' # $TemplateParameterFileSuffix

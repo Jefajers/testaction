@@ -95,7 +95,7 @@
                 }
             }
             subscriptions {
-                if (($script:AzOpsAzManagementGroup.children | Where-Object Name -eq $scopeObject.name)) {
+                if (($script:AzOpsSubscriptions.id -contains $scopeObject.Scope) -and ($script:AzOpsAzManagementGroup.children | Where-Object Name -eq $scopeObject.Name)) {
                     ConvertTo-AzOpsState -Resource ($script:AzOpsAzManagementGroup.children | Where-Object Name -eq $scopeObject.name) -ExportPath $scopeObject.statepath -StatePath $StatePath
                 }
             }

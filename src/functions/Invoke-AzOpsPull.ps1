@@ -86,14 +86,14 @@
             try {
                 Write-PSFMessage -Level Verbose -String 'Invoke-AzOpsPull.Validating.UserRole'
                 $null = Get-AzADUser -First 1 -ErrorAction Stop
-                Write-PSFMessage -Level Important -String 'Invoke-AzOpsPull.Validating.UserRole.Success'
+                Write-PSFMessage -Level Verbose -String 'Invoke-AzOpsPull.Validating.UserRole.Success'
                 if (-not $SkipPim) {
                     Write-PSFMessage -Level Verbose -String 'Invoke-AzOpsPull.Validating.AADP2'
                     $servicePlanName = "AAD_PREMIUM_P2"
                     $subscribedSkus = Invoke-AzRestMethod -Uri https://graph.microsoft.com/v1.0/subscribedSkus -ErrorAction Stop
                     $subscribedSkusValue = $subscribedSkus.Content | ConvertFrom-Json -Depth 100 | Select-Object value
                     if ($servicePlanName -in $subscribedSkusValue.value.servicePlans.servicePlanName) {
-                        Write-PSFMessage -Level Important -String 'Invoke-AzOpsPull.Validating.AADP2.Success'
+                        Write-PSFMessage -Level Verbose -String 'Invoke-AzOpsPull.Validating.AADP2.Success'
                     }
                     else {
                         Write-PSFMessage -Level Warning -String 'Invoke-AzOpsPull.Validating.AADP2.Failed'
@@ -160,6 +160,7 @@
         # Parameters
         $parameters = $PSBoundParameters | ConvertTo-PSFHashtable -Inherit -Include IncludeResourcesInResourceGroup, IncludeResourceType, SkipPim, SkipLock, SkipPolicy, SkipRole, SkipResourceGroup, SkipChildResource, SkipResource, SkipResourceType, StatePath
 
+        Write-PSFMessage -Level Important -String 'Invoke-AzOpsPull.Building.State' -StringValues $StatePath
         if ($rootScope -and $script:AzOpsAzManagementGroup) {
             foreach ($root in $rootScope) {
                 # Create AzOpsState structure recursively
