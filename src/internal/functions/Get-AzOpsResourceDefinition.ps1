@@ -145,6 +145,7 @@
 
                         Import-Module "$([PSFramework.PSFCore.PSFCoreHost]::ModuleRoot)/PSFramework.psd1"
                         $azOps = Import-Module $runspaceData.AzOpsPath -Force -PassThru
+
                         & $azOps {
                             $script:AzOpsAzManagementGroup = $runspaceData.runspace_AzOpsAzManagementGroup
                             $script:AzOpsSubscriptions = $runspaceData.runspace_AzOpsSubscriptions
@@ -259,6 +260,7 @@
 
                     Import-Module "$([PSFramework.PSFCore.PSFCoreHost]::ModuleRoot)/PSFramework.psd1"
                     $azOps = Import-Module $runspaceData.AzOpsPath -Force -PassThru
+
                     & $azOps {
                         $script:AzOpsAzManagementGroup = $runspaceData.runspace_AzOpsAzManagementGroup
                         $script:AzOpsSubscriptions = $runspaceData.runspace_AzOpsSubscriptions
@@ -349,6 +351,7 @@
 
                     Import-Module "$([PSFramework.PSFCore.PSFCoreHost]::ModuleRoot)/PSFramework.psd1"
                     $azOps = Import-Module $runspaceData.AzOpsPath -Force -PassThru
+
                     & $azOps {
                         $script:AzOpsAzManagementGroup = $runspaceData.runspace_AzOpsAzManagementGroup
                         $script:AzOpsSubscriptions = $runspaceData.runspace_AzOpsSubscriptions

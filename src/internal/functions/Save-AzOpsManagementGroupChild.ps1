@@ -77,15 +77,14 @@
             Get-ChildItem -Path (Get-ChildItem -Path $Statepath -File -Recurse -Force | Where-Object Name -eq $statepathFileName).Directory -File -Filter 'Microsoft.*' | Move-Item -Destination $statepathDirectory -Force
 
         }
+        $subscriptions = @()
         switch ($scopeObject.Type) {
             managementGroups {
-                if (-not (Test-Path $scopeObject.StatePath)) {
-                    ConvertTo-AzOpsState -Resource ($script:AzOpsAzManagementGroup | Where-Object { $_.Name -eq $scopeObject.ManagementGroup }) -ExportPath $scopeObject.StatePath -StatePath $StatePath
-                }
+                ConvertTo-AzOpsState -Resource ($script:AzOpsAzManagementGroup | Where-Object { $_.Name -eq $scopeObject.ManagementGroup }) -ExportPath $scopeObject.StatePath -StatePath $StatePath
                 foreach ($child in $script:AzOpsAzManagementGroup.Where{ $_.Name -eq $scopeObject.ManagementGroup }.Children) {
                     if ($child.Type -eq '/subscriptions') {
                         if ($script:AzOpsSubscriptions.Id -contains $child.Id) {
-                            Save-AzOpsManagementGroupChild -Scope $child.Id -StatePath $StatePath
+                            $subscriptions += Save-AzOpsManagementGroupChild -Scope $child.Id -StatePath $StatePath
                         }
                         else {
                             Write-PSFMessage -Level Debug -String 'Save-AzOpsManagementGroupChild.Subscription.NotFound' -StringValues $child.Name
@@ -98,9 +97,40 @@
             }
             subscriptions {
                 if (($script:AzOpsSubscriptions.Id -contains $scopeObject.Scope) -and ($script:AzOpsAzManagementGroup.Children | Where-Object Name -eq $scopeObject.Name)) {
-                    if (-not (Test-Path $scopeObject.StatePath)) {
-                        ConvertTo-AzOpsState -Resource ($script:AzOpsAzManagementGroup.Children | Where-Object Name -eq $scopeObject.Name) -ExportPath $scopeObject.StatePath -StatePath $StatePath
+                    $return = [PSCustomObject]@{
+                        Subscription = ($script:AzOpsAzManagementGroup.Children | Where-Object Name -eq $scopeObject.Name)
+                        Path = $scopeObject.StatePath
                     }
+                    return $return
+                }
+            }
+        }
+        if ($subscriptions) {
+            # Prepare Input Data for parallel processing
+            $runspaceData = @{
+                AzOpsPath                       = "$($script:ModuleRoot)\AzOps.psd1"
+                StatePath                       = $StatePath
+                runspace_AzOpsAzManagementGroup = $script:AzOpsAzManagementGroup
+                runspace_AzOpsSubscriptions     = $script:AzOpsSubscriptions
+                runspace_AzOpsPartialRoot       = $script:AzOpsPartialRoot
+                runspace_AzOpsResourceProvider  = $script:AzOpsResourceProvider
+            }
+            $subscriptions | Foreach-Object -ThrottleLimit (Get-PSFConfigValue -FullName 'AzOps.Core.ThrottleLimit') -Parallel {
+                $subscription = $_
+                $runspaceData = $using:runspaceData
+
+                Import-Module "$([PSFramework.PSFCore.PSFCoreHost]::ModuleRoot)/PSFramework.psd1"
+                $azOps = Import-Module $runspaceData.AzOpsPath -Force -PassThru
+
+                & $azOps {
+                    $script:AzOpsAzManagementGroup = $runspaceData.runspace_AzOpsAzManagementGroup
+                    $script:AzOpsSubscriptions = $runspaceData.runspace_AzOpsSubscriptions
+                    $script:AzOpsPartialRoot = $runspaceData.runspace_AzOpsPartialRoot
+                    $script:AzOpsResourceProvider = $runspaceData.runspace_AzOpsResourceProvider
+                }
+
+                & $azOps {
+                    ConvertTo-AzOpsState -Resource $subscription.Subscription -ExportPath $subscription.Path -StatePath $runspaceData.StatePath
                 }
             }
         }
