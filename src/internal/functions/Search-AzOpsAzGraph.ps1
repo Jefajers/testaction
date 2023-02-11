@@ -4,6 +4,8 @@
         .SYNOPSIS
             Search Graph based on input query combined with scope ManagementGroupName or Subscription Id.
             Manages paging of results, ensuring completeness of results.
+        .PARAMETER UseTenantScope
+            Use Tenant as Scope true or false
         .PARAMETER ManagementGroupName
             ManagementGroup Name
         .PARAMETER Subscription
@@ -18,6 +20,9 @@
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $false)]
+        [switch]
+        $UseTenantScope,
+        [Parameter(Mandatory = $false)]
         [string]
         $ManagementGroupName,
         [Parameter(Mandatory = $false)]
@@ -31,6 +36,13 @@
     process {
         Write-PSFMessage -Level Verbose -String 'Search-AzOpsAzGraph.Processing' -StringValues $Query
         $results = @()
+        if ($UseTenantScope) {
+            do {
+                $processing = Search-AzGraph -UseTenantScope -Query $Query -AllowPartialScope -SkipToken $processing.SkipToken -ErrorAction Stop
+                $results += $processing
+            }
+            while ($processing.SkipToken)
+        }
         if ($ManagementGroupName) {
             do {
                 $processing = Search-AzGraph -ManagementGroup $ManagementGroupName -Query $Query -AllowPartialScope -SkipToken $processing.SkipToken -ErrorAction Stop

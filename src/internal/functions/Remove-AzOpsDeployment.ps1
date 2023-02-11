@@ -161,17 +161,15 @@
             $results = @()
             if ($PartialMgDiscoveryRoot) {
                 foreach ($managementRoot in $PartialMgDiscoveryRoot) {
-                    do {
-                        $processing = Search-AzGraph -Query $query -ManagementGroup $managementRoot -SkipToken $processing.SkipToken
-                        $results += $processing
-                    } while ($processing.SkipToken)
+                    $subscriptions = Get-AzOpsNestedSubscription -Scope $managementRoot
+                    $results += Search-AzOpsAzGraph -ManagementGroupName $managementRoot -Query $query -ErrorAction Stop
+                    if ($subscriptions) {
+                        $results += Search-AzOpsAzGraph -Subscription $subscriptions -Query $query -ErrorAction Stop
+                    }
                 }
             }
             else {
-                do {
-                    $processing = Search-AzGraph -Query $query -UseTenantScope -SkipToken $processing.SkipToken
-                    $results += $processing
-                } while ($processing.SkipToken)
+                $results = Search-AzOpsAzGraph -Query $query -UseTenantScope -ErrorAction Stop
             }
             if ($results) {
                 $results = $results | Sort-Object Id -Unique
