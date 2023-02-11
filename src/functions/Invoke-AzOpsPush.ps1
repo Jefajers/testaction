@@ -199,12 +199,14 @@
         if ($deleteSet -and -not $CustomSortOrder) { $deleteSet = $deleteSet | Sort-Object }
         if ($addModifySet -and -not $CustomSortOrder) { $addModifySet = $addModifySet | Sort-Object }
 
-        Write-PSFMessage -Level Important @common -String 'Invoke-AzOpsPush.Change.AddModify'
-        foreach ($item in $addModifySet) {
-            Write-PSFMessage -Level Important @common -String 'Invoke-AzOpsPush.Change.AddModify.File' -StringValues $item
+        if ($addModifySet) {
+            Write-PSFMessage -Level Important @common -String 'Invoke-AzOpsPush.Change.AddModify'
+            foreach ($item in $addModifySet) {
+                Write-PSFMessage -Level Important @common -String 'Invoke-AzOpsPush.Change.AddModify.File' -StringValues $item
+            }
         }
-        Write-PSFMessage -Level Important @common -String 'Invoke-AzOpsPush.Change.Delete'
         if ($DeleteSetContents -and $deleteSet) {
+            Write-PSFMessage -Level Important @common -String 'Invoke-AzOpsPush.Change.Delete'
             $DeleteSetContents = $DeleteSetContents -join "" -split "-- " | Where-Object { $_ }
             foreach ($item in $deleteSet) {
                 Write-PSFMessage -Level Important @common -String 'Invoke-AzOpsPush.Change.Delete.File' -StringValues $item
