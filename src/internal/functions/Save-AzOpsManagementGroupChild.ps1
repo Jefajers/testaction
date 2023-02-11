@@ -79,10 +79,12 @@
         }
         switch ($scopeObject.Type) {
             managementGroups {
-                ConvertTo-AzOpsState -Resource ($script:AzOpsAzManagementGroup | Where-Object { $_.Name -eq $scopeObject.managementgroup }) -ExportPath $scopeObject.statepath -StatePath $StatePath
-                foreach ($child in $script:AzOpsAzManagementGroup.Where{ $_.Name -eq $scopeObject.managementgroup }.Children) {
+                if (-not (Test-Path $scopeObject.StatePath)) {
+                    ConvertTo-AzOpsState -Resource ($script:AzOpsAzManagementGroup | Where-Object { $_.Name -eq $scopeObject.ManagementGroup }) -ExportPath $scopeObject.StatePath -StatePath $StatePath
+                }
+                foreach ($child in $script:AzOpsAzManagementGroup.Where{ $_.Name -eq $scopeObject.ManagementGroup }.Children) {
                     if ($child.Type -eq '/subscriptions') {
-                        if ($script:AzOpsSubscriptions.id -contains $child.Id) {
+                        if ($script:AzOpsSubscriptions.Id -contains $child.Id) {
                             Save-AzOpsManagementGroupChild -Scope $child.Id -StatePath $StatePath
                         }
                         else {
@@ -95,8 +97,10 @@
                 }
             }
             subscriptions {
-                if (($script:AzOpsSubscriptions.id -contains $scopeObject.Scope) -and ($script:AzOpsAzManagementGroup.children | Where-Object Name -eq $scopeObject.Name)) {
-                    ConvertTo-AzOpsState -Resource ($script:AzOpsAzManagementGroup.children | Where-Object Name -eq $scopeObject.name) -ExportPath $scopeObject.statepath -StatePath $StatePath
+                if (($script:AzOpsSubscriptions.Id -contains $scopeObject.Scope) -and ($script:AzOpsAzManagementGroup.Children | Where-Object Name -eq $scopeObject.Name)) {
+                    if (-not (Test-Path $scopeObject.StatePath)) {
+                        ConvertTo-AzOpsState -Resource ($script:AzOpsAzManagementGroup.Children | Where-Object Name -eq $scopeObject.Name) -ExportPath $scopeObject.StatePath -StatePath $StatePath
+                    }
                 }
             }
         }
