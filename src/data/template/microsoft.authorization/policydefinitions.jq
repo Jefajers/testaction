@@ -1,0 +1,1 @@
+del(.ResourceId, .id, .tenantId, .subscriptionId, .properties.policyType, .properties.metadata.createdOn, .properties.metadata.updatedOn, .properties.metadata.createdBy, .properties.metadata.createdBy, .properties.metadata.updatedBy)
