@@ -27,13 +27,13 @@
 
         switch ($ScopeObject.Type) {
             managementGroups {
-                Write-PSFMessage -Level Important -String 'Get-AzOpsPolicyExemption.ManagementGroup' -StringValues $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup -Target $ScopeObject
+                Write-PSFMessage -Level Debug -String 'Get-AzOpsPolicyExemption.ManagementGroup' -StringValues $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup -Target $ScopeObject
             }
             subscriptions {
-                Write-PSFMessage -Level Important -String 'Get-AzOpsPolicyExemption.Subscription' -StringValues $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription -Target $ScopeObject
+                Write-PSFMessage -Level Debug -String 'Get-AzOpsPolicyExemption.Subscription' -StringValues $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription -Target $ScopeObject
             }
             resourcegroups {
-                Write-PSFMessage -Level Important -String 'Get-AzOpsPolicyExemption.ResourceGroup' -StringValues $ScopeObject.ResourceGroup -Target $ScopeObject
+                Write-PSFMessage -Level Debug -String 'Get-AzOpsPolicyExemption.ResourceGroup' -StringValues $ScopeObject.ResourceGroup -Target $ScopeObject
             }
         }
         Get-AzPolicyExemption -Scope $ScopeObject.Scope -WarningAction SilentlyContinue | Where-Object ResourceId -match $ScopeObject.scope
