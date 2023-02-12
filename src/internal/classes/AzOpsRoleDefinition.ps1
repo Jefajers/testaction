@@ -1,26 +1,25 @@
 ﻿class AzOpsRoleDefinition {
-    [string]$ResourceType
-    [string]$Name
-    [string]$Id
-    [hashtable]$Properties
-    AzOpsRoleDefinition($Properties) {
+    [string]$type
+    [string]$name
+    [string]$id
+    [hashtable]$properties
+    AzOpsRoleDefinition($properties) {
         # Removing the Trailing slash to ensure that '/' is not appended twice when adding '/providers/xxx'.
         # Example: '/subscriptions/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX/' is a valid assignment scope.
-        $this.Id = '/' + $Properties.AssignableScopes[0].Trim('/') + '/providers/Microsoft.Authorization/roleDefinitions/' + $Properties.Id
-        $this.Name = $Properties.Id
-        $this.Properties = [ordered]@{
-            AssignableScopes = @($Properties.AssignableScopes)
-            Description	     = $Properties.Description
-            Permissions	     = @(
+        $this.id = '/' + $properties.properties.assignableScopes[0].Trim('/') + '/providers/Microsoft.Authorization/roleDefinitions/' + $properties.id
+        $this.name = $properties.name
+        $this.properties = [ordered]@{
+            assignableScopes = @($properties.properties.assignableScopes)
+            description	     = $properties.properties.description
+            permissions	     = @(
                 [ordered]@{
-                    Actions = @($Properties.Actions)
-                    DataActions = @($Properties.DataActions)
-                    NotActions = @($Properties.NotActions)
-                    NotDataActions = @($Properties.NotDataActions)
+                    actions = @($properties.properties.permissions.actions)
+                    dataActions = @($properties.properties.permissions.dataActions)
+                    notActions = @($properties.properties.permissions.notActions)
+                    notDataActions = @($properties.properties.permissions.notDataActions)
                 }
             )
-            RoleName		 = $Properties.Name
         }
-        $this.ResourceType = "Microsoft.Authorization/roleDefinitions"
+        $this.type = $properties.type
     }
 }
