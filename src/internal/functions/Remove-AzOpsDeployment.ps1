@@ -161,35 +161,15 @@
             $results = @()
             if ($PartialMgDiscoveryRoot) {
                 foreach ($managementRoot in $PartialMgDiscoveryRoot) {
-                    $processing = Search-AzGraph -Query $query -ManagementGroup $managementRoot
-                    if ($processing) {
-                        $results += $processing
-                        do {
-                            if ($processing.SkipToken) {
-                                $processing = Search-AzGraph -Query $query -ManagementGroup $managementRoot -SkipToken $processing.SkipToken
-                                $results += $processing
-                            }
-                            else {
-                                $done = $true
-                            }
-                        } while ($done -ne $true)
+                    $subscriptions = Get-AzOpsNestedSubscription -Scope $managementRoot
+                    $results += Search-AzOpsAzGraph -ManagementGroupName $managementRoot -Query $query -ErrorAction Stop
+                    if ($subscriptions) {
+                        $results += Search-AzOpsAzGraph -Subscription $subscriptions -Query $query -ErrorAction Stop
                     }
                 }
             }
             else {
-                $processing = Search-AzGraph -Query $query -UseTenantScope
-                if ($processing) {
-                    $results += $processing
-                    do {
-                        if ($processing.SkipToken) {
-                            $processing = Search-AzGraph -Query $query -UseTenantScope -SkipToken $processing.SkipToken
-                            $results += $processing
-                        }
-                        else {
-                            $done = $true
-                        }
-                    } while ($done -ne $true)
-                }
+                $results = Search-AzOpsAzGraph -Query $query -UseTenantScope -ErrorAction Stop
             }
             if ($results) {
                 $results = $results | Sort-Object Id -Unique
