@@ -92,7 +92,7 @@
         $backoffMultiplier = 2
         $maxRetryCount = 3
         # Logging output metadata
-        $common = @{
+        $msgCommon = @{
             FunctionName = 'Get-AzOpsResourceDefinition'
             Target       = $ScopeObject
         }
@@ -124,11 +124,11 @@
         }
         switch ($scopeObject.Type) {
             subscriptions {
-                Write-PSFMessage -Level Important @common -String 'Get-AzOpsResourceDefinition.Subscription.Processing' -StringValues $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription
+                Write-PSFMessage -Level Important @msgCommon -String 'Get-AzOpsResourceDefinition.Subscription.Processing' -StringValues $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription
                 $subscriptions = Get-AzSubscription -SubscriptionId $scopeObject.Name | Where-Object { $_.Id -in $script:AzOpsSubscriptions.id }
             }
             managementGroups {
-                Write-PSFMessage -Level Important @common -String 'Get-AzOpsResourceDefinition.ManagementGroup.Processing' -StringValues $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup
+                Write-PSFMessage -Level Important @msgCommon -String 'Get-AzOpsResourceDefinition.ManagementGroup.Processing' -StringValues $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup
                 $query = "resourcecontainers | where type == 'microsoft.management/managementgroups' | order by ['id'] asc"
                 $managementgroups = Search-AzOpsAzGraph -ManagementGroupName $scopeObject.Name -Query $query -ErrorAction Stop | Where-Object { $_.id -in $script:AzOpsAzManagementGroup.Id }
                 $subscriptions = Get-AzOpsNestedSubscription -Scope $scopeObject.Name
@@ -137,11 +137,6 @@
                     $managementgroups | Foreach-Object -ThrottleLimit (Get-PSFConfigValue -FullName 'AzOps.Core.ThrottleLimit') -Parallel {
                         $managementgroup = $_
                         $runspaceData = $using:runspaceData
-
-                        $msgCommon = @{
-                            FunctionName = $using:common.FunctionName
-                            ModuleName   = 'AzOps'
-                        }
 
                         Import-Module "$([PSFramework.PSFCore.PSFCoreHost]::ModuleRoot)/PSFramework.psd1"
                         $azOps = Import-Module $runspaceData.AzOpsPath -Force -PassThru
@@ -160,7 +155,6 @@
                                     Get-AzOpsPim -ScopeObject $ScopeObject -StatePath $runspaceData.Statepath
                                 }
                                 if (-not $using:SkipPolicy) {
-                                    Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.Processing.Detail' -StringValues 'Policy Exemptions', $ScopeObject.Scope
                                     $policyExemptions = Get-AzOpsPolicyExemption -ScopeObject $ScopeObject
                                     $policyExemptions | ConvertTo-AzOpsState -StatePath $runspaceData.Statepath
                                 }
@@ -185,11 +179,6 @@
                 $subscription = $_
                 $runspaceData = $using:runspaceData
 
-                $msgCommon = @{
-                    FunctionName = $using:common.FunctionName
-                    ModuleName   = 'AzOps'
-                }
-
                 Import-Module "$([PSFramework.PSFCore.PSFCoreHost]::ModuleRoot)/PSFramework.psd1"
                 $azOps = Import-Module $runspaceData.AzOpsPath -Force -PassThru
 
@@ -207,7 +196,6 @@
                             Get-AzOpsPim -ScopeObject $scopeObject -StatePath $runspaceData.Statepath
                         }
                         if (-not $using:SkipPolicy) {
-                            Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.Processing.Detail' -StringValues 'Policy Exemptions', $scopeObject.Scope
                             $policyExemptions = Get-AzOpsPolicyExemption -ScopeObject $scopeObject
                             $policyExemptions | ConvertTo-AzOpsState -StatePath $runspaceData.Statepath
                         }
@@ -226,10 +214,10 @@
         #region Process Resource Groups
         if ($SkipResourceGroup -or (-not $subscriptions)) {
             if ($SkipResourceGroup) {
-                Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.SkippingResourceGroup'
+                Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.SkippingResourceGroup'
             }
             else {
-                Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Subscription.NotFound'
+                Write-PSFMessage -Level Verbose @msgCommon-String 'Get-AzOpsResourceDefinition.Subscription.NotFound'
             }
         }
         else {
@@ -245,18 +233,13 @@
             }
             if ($resourceGroups) {
                 foreach ($resourceGroup in $resourceGroups) {
-                    Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.ResourceGroup' -StringValues $resourceGroup.name -Target $resourceGroup
+                    Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.Processing.ResourceGroup' -StringValues $resourceGroup.name -Target $resourceGroup
                     ConvertTo-AzOpsState -Resource $resourceGroup -StatePath $Statepath
                 }
                 # Process Resource Groups in parallel
                 $resourceGroups | Foreach-Object -ThrottleLimit (Get-PSFConfigValue -FullName 'AzOps.Core.ThrottleLimit') -Parallel {
                     $resourceGroup = $_
                     $runspaceData = $using:runspaceData
-
-                    $msgCommon = @{
-                        FunctionName = $using:common.FunctionName
-                        ModuleName   = 'AzOps'
-                    }
 
                     Import-Module "$([PSFramework.PSFCore.PSFCoreHost]::ModuleRoot)/PSFramework.psd1"
                     $azOps = Import-Module $runspaceData.AzOpsPath -Force -PassThru
@@ -278,7 +261,6 @@
                                 Get-AzOpsPim -ScopeObject $rgScopeObject -StatePath $runspaceData.Statepath
                             }
                             if (-not $using:SkipPolicy) {
-                                Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.Processing.Detail' -StringValues 'Policy Exemptions', $rgScopeObject.Scope
                                 $policyExemptions = Get-AzOpsPolicyExemption -ScopeObject $rgScopeObject
                                 $policyExemptions | ConvertTo-AzOpsState -StatePath $runspaceData.Statepath
                             }
@@ -290,7 +272,7 @@
                 }
             }
             else {
-                Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.NoResourceGroup' -StringValues $scopeObject.Name
+                Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.NoResourceGroup' -StringValues $scopeObject.Name
             }
             # Process Policies at Resource Group scope
             if (-not $SkipPolicy) {
@@ -303,7 +285,7 @@
             }
             # Process Resources at Resource Group scope
             if (-not $SkipResource) {
-                Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.Resource.Discovery' -StringValues $scopeObject.Name
+                Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.Processing.Resource.Discovery' -StringValues $scopeObject.Name
                 try {
                     $SkipResourceType | ForEach-Object { $skipResourceTypes += ($(if($skipResourceTypes){","}) + "'" + $_  + "'") }
                     $query = "resources | where type !in~ ($skipResourceTypes)"
@@ -319,35 +301,30 @@
                     $resourcesBase = Search-AzOpsAzGraph -Subscription $subscriptions -Query $query -ErrorAction Stop
                 }
                 catch {
-                    Write-PSFMessage -Level Warning @common -String 'Get-AzOpsResourceDefinition.Processing.Resource.Warning' -StringValues $scopeObject.Name
+                    Write-PSFMessage -Level Warning @msgCommon -String 'Get-AzOpsResourceDefinition.Processing.Resource.Warning' -StringValues $scopeObject.Name
                 }
                 if ($resourcesBase) {
                     $resources = @()
                     foreach ($resource in $resourcesBase) {
                         if ($resourceGroups | Where-Object { $_.name -eq $resource.resourceGroup -and $_.subscriptionId -eq $resource.subscriptionId }) {
-                            Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.Resource' -StringValues $resource.name, $resource.resourcegroup -Target $resource
+                            Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.Processing.Resource' -StringValues $resource.name, $resource.resourcegroup -Target $resource
                             $resources += $resource
                             ConvertTo-AzOpsState -Resource $resource -StatePath $Statepath
                         }
                     }
                 }
                 else {
-                    Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Processing.Resource.Discovery.NotFound' -StringValues $scopeObject.Name
+                    Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.Processing.Resource.Discovery.NotFound' -StringValues $scopeObject.Name
                 }
             }
             else {
-                Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.SkippingResources'
+                Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.SkippingResources'
             }
             # Process resources as scope in parallel, look for childResource
             if (-not $SkipResource -and -not $SkipChildResource) {
                 $resources | Foreach-Object -ThrottleLimit (Get-PSFConfigValue -FullName 'AzOps.Core.ThrottleLimit') -Parallel {
                     $resource = $_
                     $runspaceData = $using:runspaceData
-
-                    $msgCommon = @{
-                        FunctionName = $using:common.FunctionName
-                        ModuleName   = 'AzOps'
-                    }
 
                     Import-Module "$([PSFramework.PSFCore.PSFCoreHost]::ModuleRoot)/PSFramework.psd1"
                     $azOps = Import-Module $runspaceData.AzOpsPath -Force -PassThru
@@ -382,7 +359,7 @@
                         $resourceGroup = $using:resourceGroups | Where-Object {$_.subscriptionId -eq $resource.subscriptionId -and $_.name -eq $resource.resourceGroup}
                         foreach ($exportResource in $exportResources) {
                             if (-not(($resource.name -eq $exportResource.name) -and ($resource.type -eq $exportResource.type))) {
-                                Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.Processing.ChildResource' -StringValues $exportResource.name, $resource.resourceGroup -Target $exportResource
+                                Write-PSFMessage -Level Verbose -String 'Get-AzOpsResourceDefinition.Processing.ChildResource' -StringValues $exportResource.name, $resource.resourceGroup -Target $exportResource
                                 $ChildResource = @{
                                     resourceProvider = $exportResource.type -replace '/', '_'
                                     resourceName     = $exportResource.name -replace '/', '_'
@@ -399,7 +376,7 @@
                         }
                     }
                     catch {
-                        Write-PSFMessage -Level Warning @msgCommon -String 'Get-AzOpsResourceDefinition.ChildResource.Warning' -StringValues $resource.resourceGroup, $_
+                        Write-PSFMessage -Level Warning -String 'Get-AzOpsResourceDefinition.ChildResource.Warning' -StringValues $resource.resourceGroup, $_
                     }
                     if (Test-Path -Path $tempExportPath) {
                         Remove-Item -Path $tempExportPath
@@ -407,10 +384,10 @@
                 }
             }
             else {
-                Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.SkippingChildResources'
+                Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.SkippingChildResources'
             }
         }
         #endregion Process Resource Groups
-        Write-PSFMessage -Level Verbose @common -String 'Get-AzOpsResourceDefinition.Finished' -StringValues $scopeObject.Scope
+        Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.Finished' -StringValues $scopeObject.Scope
     }
 }
