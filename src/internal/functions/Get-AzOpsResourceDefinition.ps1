@@ -232,10 +232,6 @@
                 $resourceGroups = Search-AzOpsAzGraph -Subscription $subscriptions -Query $query -ErrorAction Stop
             }
             if ($resourceGroups) {
-                foreach ($resourceGroup in $resourceGroups) {
-                    Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.Processing.ResourceGroup' -StringValues $resourceGroup.name -Target $resourceGroup
-                    ConvertTo-AzOpsState -Resource $resourceGroup -StatePath $Statepath
-                }
                 # Process Resource Groups in parallel
                 $resourceGroups | Foreach-Object -ThrottleLimit (Get-PSFConfigValue -FullName 'AzOps.Core.ThrottleLimit') -Parallel {
                     $resourceGroup = $_
@@ -249,6 +245,10 @@
                         $script:AzOpsSubscriptions = $runspaceData.runspace_AzOpsSubscriptions
                         $script:AzOpsPartialRoot = $runspaceData.runspace_AzOpsPartialRoot
                         $script:AzOpsResourceProvider = $runspaceData.runspace_AzOpsResourceProvider
+                    }
+                    # Create Resource Group in file system
+                    & $azOps {
+                        ConvertTo-AzOpsState -Resource $resourceGroup -StatePath $runspaceData.Statepath
                     }
                     # Process Privileged Identity Management resources, Policies, Locks and Roles at resource group scope
                     if ((-not $using:SkipPim) -or (-not $using:SkipPolicy) -or (-not $using:SkipRole) -or (-not $using:SkipLock)) {
