@@ -77,13 +77,16 @@
             Get-ChildItem -Path (Get-ChildItem -Path $Statepath -File -Recurse -Force | Where-Object Name -eq $statepathFileName).Directory -File -Filter 'Microsoft.*' | Move-Item -Destination $statepathDirectory -Force
 
         }
+        # Create empty object for any discovered subscriptions below
         $subscriptions = @()
+        # Based on $scopeObject perform unique logic
         switch ($scopeObject.Type) {
             managementGroups {
                 ConvertTo-AzOpsState -Resource ($script:AzOpsAzManagementGroup | Where-Object { $_.Name -eq $scopeObject.ManagementGroup }) -ExportPath $scopeObject.StatePath -StatePath $StatePath
                 foreach ($child in $script:AzOpsAzManagementGroup.Where{ $_.Name -eq $scopeObject.ManagementGroup }.Children) {
                     if ($child.Type -eq '/subscriptions') {
                         if ($script:AzOpsSubscriptions.Id -contains $child.Id) {
+                            # Subscription discovered at ManagementGroup scope, collect subscription information based on $child object and store information in $subscriptions for later
                             $subscriptions += Save-AzOpsManagementGroupChild -Scope $child.Id -StatePath $StatePath
                         }
                         else {
@@ -97,6 +100,7 @@
             }
             subscriptions {
                 if (($script:AzOpsSubscriptions.Id -contains $scopeObject.Scope) -and ($script:AzOpsAzManagementGroup.Children | Where-Object Name -eq $scopeObject.Name)) {
+                    # Subscription matching conditions found, construct subscription and object statepath into $return and output information to caller
                     $return = [PSCustomObject]@{
                         Subscription = ($script:AzOpsAzManagementGroup.Children | Where-Object Name -eq $scopeObject.Name)
                         Path = $scopeObject.StatePath
@@ -105,6 +109,7 @@
                 }
             }
         }
+        # If $subscriptions exists process all subscriptions with parallel to increase performance during folder/file creation
         if ($subscriptions) {
             # Prepare Input Data for parallel processing
             $runspaceData = @{
