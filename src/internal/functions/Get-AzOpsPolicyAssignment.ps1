@@ -39,13 +39,11 @@
         if ($ScopeObject.Type -notin 'resourcegroups', 'subscriptions', 'managementGroups') {
             return
         }
-        switch ($ScopeObject.Type) {
-            managementGroups {
-                Write-PSFMessage -Level Debug -String 'Get-AzOpsPolicyAssignment.ManagementGroup' -StringValues $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup -Target $ScopeObject
-                if ((-not $SubscriptionsToIncludeResourceGroups) -or (-not $ResourceGroups)) {
-                    $query = "policyresources | where type == 'microsoft.authorization/policyassignments' and resourceGroup == '' and subscriptionId == '' | order by ['id'] asc"
-                    Search-AzOpsAzGraph -ManagementGroupName $ScopeObject.Name -Query $query -ErrorAction Stop
-                }
+        if ($ScopeObject.Type -eq 'managementGroups') {
+            Write-PSFMessage -Level Debug -String 'Get-AzOpsPolicyAssignment.ManagementGroup' -StringValues $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup -Target $ScopeObject
+            if ((-not $SubscriptionsToIncludeResourceGroups) -or (-not $ResourceGroups)) {
+                $query = "policyresources | where type == 'microsoft.authorization/policyassignments' and resourceGroup == '' and subscriptionId == '' | order by ['id'] asc"
+                Search-AzOpsAzGraph -ManagementGroupName $ScopeObject.Name -Query $query -ErrorAction Stop
             }
         }
         if ($Subscription) {

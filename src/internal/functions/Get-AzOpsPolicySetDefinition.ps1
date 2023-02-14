@@ -29,13 +29,10 @@
         if ($ScopeObject.Type -notin 'subscriptions', 'managementGroups') {
             return
         }
-
-        switch ($ScopeObject.Type) {
-            managementGroups {
-                Write-PSFMessage -Level Debug -String 'Get-AzOpsPolicySetDefinition.ManagementGroup' -StringValues $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup -Target $ScopeObject
-                $query = "policyresources | where type == 'microsoft.authorization/policysetdefinitions' and properties.policyType == 'Custom' and subscriptionId == '' | order by ['id'] asc"
-                Search-AzOpsAzGraph -ManagementGroupName $ScopeObject.Name -Query $query -ErrorAction Stop
-            }
+        if ($ScopeObject.Type -eq 'managementGroups') {
+            Write-PSFMessage -Level Debug -String 'Get-AzOpsPolicySetDefinition.ManagementGroup' -StringValues $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup -Target $ScopeObject
+            $query = "policyresources | where type == 'microsoft.authorization/policysetdefinitions' and properties.policyType == 'Custom' and subscriptionId == '' | order by ['id'] asc"
+            Search-AzOpsAzGraph -ManagementGroupName $ScopeObject.Name -Query $query -ErrorAction Stop
         }
         if ($Subscription) {
             Write-PSFMessage -Level Debug -String 'Get-AzOpsPolicySetDefinition.Subscription' -StringValues $Subscription.count -Target $ScopeObject
