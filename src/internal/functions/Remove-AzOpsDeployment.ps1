@@ -131,7 +131,7 @@
             )
             if ($resourceToDelete.ResourceType -eq 'Microsoft.Authorization/policyDefinitions') {
                 $dependency = @()
-                $query = "PolicyResources | where type == 'microsoft.authorization/policysetdefinitions' and properties.policyType == 'Custom' | project id, policyDefinitions = (properties.policyDefinitions) | mv-expand policyDefinitions | project id, policyDefinitionId = tostring(policyDefinitions.policyDefinitionId) | where policyDefinitionId == '$($resourceToDelete.PolicyDefinitionId)' | order by policyDefinitionId asc | order by id asc"
+                $query = "PolicyResources | where type == 'microsoft.authorization/policysetdefinitions' and properties.policyType == 'Custom' | project id, type, policyDefinitions = (properties.policyDefinitions) | mv-expand policyDefinitions | project id, type, policyDefinitionId = tostring(policyDefinitions.policyDefinitionId) | where policyDefinitionId == '$($resourceToDelete.PolicyDefinitionId)' | order by policyDefinitionId asc | order by id asc"
                 $depPolicySetDefinition = Search-AzGraphDeletionDependency -query $query
                 if ($depPolicySetDefinition) {
                     $depPolicySetDefinition = foreach ($policySetDefinition in $depPolicySetDefinition) {
