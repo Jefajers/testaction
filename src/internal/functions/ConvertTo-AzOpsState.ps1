@@ -153,8 +153,8 @@
                 break
             }
             { $_.type } {
-                if ( $_.type -eq 'microsoft.resources/subscriptions/resourcegroups') {
-                    $resourceType = 'microsoft.resources/resourcegroups'
+                if ( $_.type -eq 'Microsoft.Resources/subscriptions/resourcegroups') {
+                    $resourceType = 'Microsoft.Resources/resourcegroups'
                 }
                 else {
                     $resourceType = $_.type

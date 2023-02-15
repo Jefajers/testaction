@@ -65,8 +65,19 @@
             }
         }
         if ($results) {
+            $resultsType = @()
+            foreach ($result in $results) {
+                # Process each graph result and normalize ProviderNamespace casing
+                foreach ($ResourceProvider in $script:AzOpsResourceProvider) {
+                    if ($ResourceProvider.ProviderNamespace -eq $result.type.Split('/')[0]) {
+                        $result.type = ($result.type).replace($result.type.Split('/')[0],$ResourceProvider.ProviderNamespace)
+                        $resultsType += $result
+                        break
+                    }
+                }
+            }
             Write-PSFMessage -Level Verbose -String 'Search-AzOpsAzGraph.Processing.Done' -StringValues $Query
-            return $results
+            return $resultsType
         }
         else {
             Write-PSFMessage -Level Verbose -String 'Search-AzOpsAzGraph.Processing.NoResult' -StringValues $Query

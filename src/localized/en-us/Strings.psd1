@@ -110,7 +110,6 @@
     'Get-AzOpsResourceDefinition.Processing.Resource.Discovery'                     = 'Searching for resources in [{0}]' # $scopeObject.Name
     'Get-AzOpsResourceDefinition.Processing.Resource.Discovery.NotFound'            = 'No resources found in [{0}]' # $scopeObject.Name
     'Get-AzOpsResourceDefinition.Processing.Resource.Warning'                       = 'Failed to get resources in {0}]. Consider excluding the resource causing the failure with [Core.SkipResourceType] setting' # $scopeObject.Name
-    'Get-AzOpsResourceDefinition.Processing.ResourceGroup'                          = 'Processing Resource Group [{0}]' # $resourceGroup.ResourceGroupName
     'Get-AzOpsResourceDefinition.SkippingResourceGroup'                             = 'SkipResourceGroup switch used, skipping resource Group discovery' #
     'Get-AzOpsResourceDefinition.SkippingResources'                                 = 'Resources are skipped in due to SkipResource.' #
     'Get-AzOpsResourceDefinition.Processing.ChildResource'                          = 'Processing resource [{0}] in resource Group [{1}]' # $resource.Name, $resourceGroup.ResourceGroupName
