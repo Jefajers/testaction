@@ -219,6 +219,7 @@
 
         #region remove supported resources
         if ($scopeObject.Resource -in $DeletionSupportedResourceType) {
+            $dependency = @()
             switch ($scopeObject.Resource) {
                 # Check resource existance through optimal path
                 'locks' {
@@ -227,14 +228,13 @@
                 'policyAssignments' {
                     $resourceToDelete = Get-AzPolicyAssignment -Id $scopeObject.scope -ErrorAction SilentlyContinue
                     if ($resourceToDelete) {
-                        $dependency = Get-AzPolicyAssignmentDeletionDependency -resourceToDelete $resourceToDelete
+                        $dependency += Get-AzPolicyAssignmentDeletionDependency -resourceToDelete $resourceToDelete
                         $dependency += Get-AzLocksDeletionDependency -resourceToDelete $resourceToDelete
                     }
                 }
                 'policyDefinitions' {
                     $resourceToDelete = Get-AzPolicyDefinition -Id $scopeObject.scope -ErrorAction SilentlyContinue
                     if ($resourceToDelete) {
-                        $dependency = @()
                         $dependency += Get-AzPolicyAssignmentDeletionDependency -resourceToDelete $resourceToDelete
                         $dependency += Get-AzPolicyDefinitionDeletionDependency -resourceToDelete $resourceToDelete
                         $dependency += Get-AzLocksDeletionDependency -resourceToDelete $resourceToDelete
@@ -243,20 +243,20 @@
                 'policyExemptions' {
                     $resourceToDelete = Get-AzPolicyExemption -Id $scopeObject.scope -ErrorAction SilentlyContinue
                     if ($resourceToDelete) {
-                        $dependency = Get-AzLocksDeletionDependency -resourceToDelete $resourceToDelete
+                        $dependency += Get-AzLocksDeletionDependency -resourceToDelete $resourceToDelete
                     }
                 }
                 'policySetDefinitions' {
                     $resourceToDelete = Get-AzPolicySetDefinition -Id $scopeObject.scope -ErrorAction SilentlyContinue
                     if ($resourceToDelete) {
-                        $dependency = Get-AzPolicyAssignmentDeletionDependency -resourceToDelete $resourceToDelete
+                        $dependency += Get-AzPolicyAssignmentDeletionDependency -resourceToDelete $resourceToDelete
                         $dependency += Get-AzLocksDeletionDependency -resourceToDelete $resourceToDelete
                     }
                 }
                 'roleAssignments' {
                     $resourceToDelete = Invoke-AzRestMethod -Path "$($scopeObject.scope)?api-version=2022-01-01-preview" | Where-Object { $_.StatusCode -eq 200 }
                     if ($resourceToDelete) {
-                        $dependency = Get-AzLocksDeletionDependency -resourceToDelete $resourceToDelete
+                        $dependency += Get-AzLocksDeletionDependency -resourceToDelete $resourceToDelete
                     }
                 }
             }
