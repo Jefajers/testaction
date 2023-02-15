@@ -21,7 +21,7 @@
     )
 
     process {
-        if ($ScopeObject.Type -notin 'resourcegroups', 'subscriptions', 'managementGroups') {
+        if ($ScopeObject.Type -notin 'resourceGroups', 'subscriptions', 'managementGroups') {
             return
         }
 

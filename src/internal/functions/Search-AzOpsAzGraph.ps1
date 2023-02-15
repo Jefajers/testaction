@@ -70,8 +70,14 @@
                 # Process each graph result and normalize ProviderNamespace casing
                 foreach ($ResourceProvider in $script:AzOpsResourceProvider) {
                     if ($ResourceProvider.ProviderNamespace -eq $result.type.Split('/')[0]) {
-                        $result.type = ($result.type).replace($result.type.Split('/')[0],$ResourceProvider.ProviderNamespace)
-                        $resultsType += $result
+                        foreach ($ResourceTypeName in $ResourceProvider.ResourceTypes.ResourceTypeName) {
+                            if ($ResourceTypeName -eq $result.type.Split('/')[1]) {
+                                $result.type = ($result.type).replace($result.type.Split('/')[0],$ResourceProvider.ProviderNamespace)
+                                $result.type = ($result.type).replace($result.type.Split('/')[1],$ResourceTypeName)
+                                $resultsType += $result
+                                break
+                            }
+                        }
                         break
                     }
                 }
