@@ -82,28 +82,19 @@
 
     begin {
         #region Prepare
-        if ((-not $SkipRole) -or (-not $SkipPim)) {
-            try {
-                Write-PSFMessage -Level Verbose -String 'Invoke-AzOpsPull.Validating.UserRole'
-                $null = Get-AzADUser -First 1 -ErrorAction Stop
-                Write-PSFMessage -Level Verbose -String 'Invoke-AzOpsPull.Validating.UserRole.Success'
-                if (-not $SkipPim) {
-                    Write-PSFMessage -Level Verbose -String 'Invoke-AzOpsPull.Validating.AADP2'
-                    $servicePlanName = "AAD_PREMIUM_P2"
-                    $subscribedSkus = Invoke-AzRestMethod -Uri https://graph.microsoft.com/v1.0/subscribedSkus -ErrorAction Stop
-                    $subscribedSkusValue = $subscribedSkus.Content | ConvertFrom-Json -Depth 100 | Select-Object value
-                    if ($servicePlanName -in $subscribedSkusValue.value.servicePlans.servicePlanName) {
-                        Write-PSFMessage -Level Verbose -String 'Invoke-AzOpsPull.Validating.AADP2.Success'
-                    }
-                    else {
-                        Write-PSFMessage -Level Warning -String 'Invoke-AzOpsPull.Validating.AADP2.Failed'
-                        $SkipPim = $true
-                    }
+        if (-not $SkipPim) {
+            if (-not $SkipPim) {
+                Write-PSFMessage -Level Verbose -String 'Invoke-AzOpsPull.Validating.AADP2'
+                $servicePlanName = "AAD_PREMIUM_P2"
+                $subscribedSkus = Invoke-AzRestMethod -Uri https://graph.microsoft.com/v1.0/subscribedSkus -ErrorAction Stop
+                $subscribedSkusValue = $subscribedSkus.Content | ConvertFrom-Json -Depth 100 | Select-Object value
+                if ($servicePlanName -in $subscribedSkusValue.value.servicePlans.servicePlanName) {
+                    Write-PSFMessage -Level Verbose -String 'Invoke-AzOpsPull.Validating.AADP2.Success'
                 }
-            }
-            catch {
-                Write-PSFMessage -Level Warning -String 'Invoke-AzOpsPull.Validating.UserRole.Failed'
-                $SkipPim = $true
+                else {
+                    Write-PSFMessage -Level Warning -String 'Invoke-AzOpsPull.Validating.AADP2.Failed'
+                    $SkipPim = $true
+                }
             }
         }
 
