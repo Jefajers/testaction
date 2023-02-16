@@ -91,11 +91,6 @@
         # Set variables for retry with exponential backoff
         $backoffMultiplier = 2
         $maxRetryCount = 3
-        # Logging output metadata
-        $msgCommon = @{
-            FunctionName = 'Get-AzOpsResourceDefinition'
-            Target       = $ScopeObject
-        }
         # Prepare Input Data for parallel processing
         $runspaceData = @{
             AzOpsPath                       = "$($script:ModuleRoot)\AzOps.psd1"
@@ -113,6 +108,11 @@
         Write-PSFMessage -Level Important -String 'Get-AzOpsResourceDefinition.Processing' -StringValues $Scope
         try {
             $scopeObject = New-AzOpsScope -Scope $Scope -StatePath $StatePath -ErrorAction Stop
+            # Logging output metadata
+            $msgCommon = @{
+                FunctionName = 'Get-AzOpsResourceDefinition'
+                Target       = $ScopeObject
+            }
         }
         catch {
             Write-PSFMessage -Level Warning -String 'Get-AzOpsResourceDefinition.Processing.NotFound' -StringValues $Scope
@@ -217,7 +217,7 @@
                 Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.SkippingResourceGroup'
             }
             else {
-                Write-PSFMessage -Level Verbose @msgCommon-String 'Get-AzOpsResourceDefinition.Subscription.NotFound'
+                Write-PSFMessage -Level Verbose @msgCommon -String 'Get-AzOpsResourceDefinition.Subscription.NotFound'
             }
         }
         else {

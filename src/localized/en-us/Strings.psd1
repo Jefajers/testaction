@@ -155,9 +155,14 @@
     'Invoke-AzOpsPull.Validating.AADP2'                                             = 'Asserting fundamental Azure AD P2 licensing' #
     'Invoke-AzOpsPull.Validating.AADP2.Success'                                     = 'Azure AD P2 licensing validated' #
     'Invoke-AzOpsPull.Validating.AADP2.Failed'                                      = 'Azure AD P2 licensing not found' #
+    'Invoke-AzOpsPull.Validating.UserRole'                                          = 'Asserting fundamental Azure access' #
+    'Invoke-AzOpsPull.Validating.UserRole.Failed'                                   = 'Insufficient access to Azure AD. Privileged Identity Management information will not be pulled' #
+    'Invoke-AzOpsPull.Validating.UserRole.Success'                                  = 'Azure access validated' #
     'Invoke-AzOpsPull.Validating.ResourceGroupDiscovery.Failed'                     = 'SkipResource set to false or SkipChildResource set to false requires SkipResourceGroup to be set to false. Change value for SkipResourceGroup and retry operation. {0} https://github.com/azure/azops/wiki/settings' #
 
     'Invoke-AzOpsRestMethod.Processing'                                             = 'Invoke-AzRestMethod processing path: [{0}]' # $Path
+    'Invoke-AzOpsRestMethod.Processing.Warning'                                     = 'Invoke-AzRestMethod received [{0}] while processing: [{1}]' # $_, $Path
+    'Invoke-AzOpsRestMethod.Processing.RateLimit'                                   = 'Invoke-AzRestMethod is throttled while processing: [{0}], going to sleep for {1} seconds' # $Path, $_.value
 
     'Invoke-AzOpsPush.Change.AddModify'                                             = 'Adding or modifying:' #
     'Invoke-AzOpsPush.Change.AddModify.File'                                        = '  {0}' # $item

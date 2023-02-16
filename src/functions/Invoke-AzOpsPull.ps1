@@ -83,7 +83,10 @@
     begin {
         #region Prepare
         if (-not $SkipPim) {
-            if (-not $SkipPim) {
+            try {
+                Write-PSFMessage -Level Verbose -String 'Invoke-AzOpsPull.Validating.UserRole'
+                $null = Get-AzADUser -First 1 -ErrorAction Stop
+                Write-PSFMessage -Level Verbose -String 'Invoke-AzOpsPull.Validating.UserRole.Success'
                 Write-PSFMessage -Level Verbose -String 'Invoke-AzOpsPull.Validating.AADP2'
                 $servicePlanName = "AAD_PREMIUM_P2"
                 $subscribedSkus = Invoke-AzRestMethod -Uri https://graph.microsoft.com/v1.0/subscribedSkus -ErrorAction Stop
@@ -95,6 +98,10 @@
                     Write-PSFMessage -Level Warning -String 'Invoke-AzOpsPull.Validating.AADP2.Failed'
                     $SkipPim = $true
                 }
+            }
+            catch {
+                Write-PSFMessage -Level Warning -String 'Invoke-AzOpsPull.Validating.UserRole.Failed'
+                $SkipPim = $true
             }
         }
 

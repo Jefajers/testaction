@@ -36,7 +36,7 @@
                 Write-PSFMessage -Level Debug -String 'Get-AzOpsPolicyExemption.ResourceGroup' -StringValues $ScopeObject.ResourceGroup -Target $ScopeObject
             }
         }
-        Get-AzPolicyExemption -Scope $ScopeObject.Scope -WarningAction SilentlyContinue | Where-Object ResourceId -match $ScopeObject.scope
+        Get-AzPolicyExemption -Scope $ScopeObject.Scope -WarningAction SilentlyContinue -ErrorAction Continue | Where-Object ResourceId -match $ScopeObject.scope -ErrorAction Continue
     }
 
 }

@@ -21,9 +21,22 @@
         # Process Path with given Method
         Write-PSFMessage -Level Debug -String 'Invoke-AzOpsRestMethod.Processing' -StringValues $Path
         $allresults = do {
-            $results = ((Invoke-AzRestMethod -Path $Path -Method $Method).Content | ConvertFrom-Json -Depth 100)
-            $results.value
-            $path = $results.nextLink -replace 'https://management\.azure\.com'
+            try {
+                $results = ((Invoke-AzRestMethod -Path $Path -Method $Method -ErrorAction Stop).Content | ConvertFrom-Json -Depth 100)
+                $results.value
+                $path = $results.nextLink -replace 'https://management\.azure\.com'
+                if ($results.StatusCode -eq '429' -or $results.StatusCode -like '5*') {
+                    $results.Headers.GetEnumerator() | ForEach-Object {
+                        if ($_.key -eq 'Retry-After') {
+                            Write-PSFMessage -Level Warning -String 'Invoke-AzOpsRestMethod.Processing.RateLimit' -StringValues $Path, $_.value
+                            Start-Sleep -Seconds $_.value
+                        }
+                    }
+                }
+            }
+            catch {
+                Write-PSFMessage -Level Warning -String 'Invoke-AzOpsRestMethod.Processing.Warning' -StringValues $_, $Path
+            }
         }
         while ($path)
         if ($allresults) {
