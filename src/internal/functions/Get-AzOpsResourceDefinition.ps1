@@ -125,7 +125,7 @@
         switch ($scopeObject.Type) {
             subscriptions {
                 Write-PSFMessage -Level Important @msgCommon -String 'Get-AzOpsResourceDefinition.Subscription.Processing' -StringValues $ScopeObject.SubscriptionDisplayName, $ScopeObject.Subscription
-                $subscriptions = Get-AzSubscription -SubscriptionId $scopeObject.Name | Where-Object { $_.Id -in $script:AzOpsSubscriptions.id }
+                $subscriptions = Get-AzSubscription -SubscriptionId $scopeObject.Name | Where-Object { "/subscriptions/$($_.Id)" -in $script:AzOpsSubscriptions.id }
             }
             managementGroups {
                 Write-PSFMessage -Level Important @msgCommon -String 'Get-AzOpsResourceDefinition.ManagementGroup.Processing' -StringValues $ScopeObject.ManagementGroupDisplayName, $ScopeObject.ManagementGroup
