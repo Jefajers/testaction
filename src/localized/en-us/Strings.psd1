@@ -14,7 +14,7 @@
     'Assert-AzOpsJqDependency.Success'                                              = 'Supported version of jq found in current path' #
 
     'Assert-AzOpsBicepDependency.Validating'                                        = 'Validating if bicep is in current path' #
-    'Assert-AzOpsBicepDependency.Success'                                           = 'Bicep found in current path' #
+    'Assert-AzOpsBicepDependency.Success'                                           = 'Bicep found in current path0' #
     'Assert-AzOpsBicepDependency.NotFound'                                          = 'Unable to locate bicep binary. Will not be able to deploy bicep templates.' #
 
     'AzOpsScope.GetAzOpsManagementGroupPath.NotFound'                               = 'Management Group path not found: {0}' # $managementgroupName
